@@ -47,6 +47,10 @@ nSats = len(satRiseTimeList)
 
 now = datetime.datetime.utcnow()
 
+
+# %%
+
+
 idxVisibleSat = [iSat for iSat in range(nSats) if now > satRiseTimeList[iSat] and now < satSetTimeList[iSat]]
 
 #last sat
@@ -90,3 +94,9 @@ if verbose:
     print("\t set before {}".format(timeDiffSinceSatSet[idxLastSat]))
     print("\t was online for {}".format(satSetTimeList[idxLastSat] - satRiseTimeList[idxLastSat]))
     print("\t {}".format(completeDataSets[idxLastSat])  ) 
+    
+# %%
+print("UTC time: {}".format(now))    
+for idx in range(nSats):
+    print("{} {}".format(idx, completeDataSets[idx])  ) 
+
