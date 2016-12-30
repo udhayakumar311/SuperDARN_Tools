@@ -189,11 +189,12 @@ def read_swg_schedule(month, year):
 # %%
     
     
-url_schedule = 'https://raw.githubusercontent.com/UAF-SuperDARN-OPS/schedule_files/adak/ade/ade.a.scd'
+
 root_schedule_url = 'https://raw.githubusercontent.com/UAF-SuperDARN-OPS/schedule_files/'
 
-schedule_file_list = [["adak/ade/ade.a.scd"], ["adak/adw/adw.a.scd"], ["kodiak/kod/kod.c.scd"], ["kodiak/kod/kod.d.scd", "kodiak/kod/kod.d.campaign.scd"], ['mcmurdo/mcm/mcm.a.scd'], ['mcmurdo/mcm/mcm.b.scd'], ['southpole/sps/sps.a.scd']]
+schedule_file_list = [["adak/ade/ade.a.scd"], ["adak/adw/adw.a.scd"], ["kodiak/kod/kod.c.scd", "kodiak/kod/kod.c.campaign.scd"], ["kodiak/kod/kod.d.scd", "kodiak/kod/kod.d.campaign.scd"], ['mcmurdo/mcm/mcm.a.scd'], ['mcmurdo/mcm/mcm.b.scd'], ['southpole/sps/sps.a.scd']]
 #, 'kodiak/kod/kod.c.campaign.scd', 'kodiak/kod/kod.d.campaign.scd'
+schedule_file_list.reverse() # reverse order to have adak at the top
 schedule_list = []
 
 for radar_file_list in schedule_file_list:
@@ -206,17 +207,24 @@ for radar_file_list in schedule_file_list:
 now = datetime.datetime.now()
 swg_schedule = read_swg_schedule(now.month, now.year)
 
-
+swg_plotNextMonth = True
+nextMonth = now + datetime.timedelta(days=30)
+swg_schedule_nextMonth = read_swg_schedule(nextMonth.month, nextMonth.year)
 # %%
 
 plotRange = [-1, 3] # in days from today
+labelSWGschedule = True
+
 #plotRange = [-25, 35] # in days from today
+#labelSWGschedule = False
 
-fig, ax = plt.subplots()
+fig = plt.figure(figsize=[16, 10])
+ax = plt.subplot2grid((1,9), (0,0), colspan=8)
 
-controlProgramColor = dict(normalscan="green", normalsound="royalblue", themisscan='darkred', pcodescan_15km='purple', rbspscan='orange', iwd_normalscan='y',noopscan='white', iwdscan='darkturquoise')
+controlProgramColor = dict(normalscan="limegreen", normalsound="darkolivegreen", themisscan='royalblue', pcodescan_15km='purple',  codescan_15km="magenta" ,rbspscan='orange', iwd_normalscan='y',noopscan='gray', iwdscan='darkturquoise')
 
-yLabelList = [""]
+yLabelList = []
+yTickList = []
 iSchedule = 0
 
 now = datetime.datetime.utcnow()
@@ -224,11 +232,11 @@ xLimStart = now.date() + datetime.timedelta(days=plotRange[0])
 xLimEnd = now.date() + datetime.timedelta(days=plotRange[1])
 
 for iRadar in range(len(schedule_list)):
-    iSchedule += 1
-    yLabelList.append("")
+    iSchedule += 0.5
     for iSchedInRadar, currSchedule in enumerate(schedule_list[iRadar]):
-        iSchedule += 1
+        iSchedule += 0.8
         yLabelList.append(schedule_file_list[iRadar][iSchedInRadar].split("/")[-1][:-4])
+        yTickList.append(iSchedule)
         for iEntry in range(len(currSchedule.durationList)):
             #if currSchedule.startTimeList[iEntry] > now + datetime.timedelta(days=plotRange[1]) or (currSchedule.startTimeList[iEntry] + datetime.timedelta( minutes=currSchedule.durationList[iEntry])) < now + datetime.timedelta(days=plotRange[0]):
             #    continue
@@ -242,36 +250,78 @@ for iRadar in range(len(schedule_list)):
             duration = currSchedule.durationList[iEntry]/60/24
             ax.barh(iSchedule,  duration, left=startPoint, align='center', color=plotColor)
             textPosition = startPoint+datetime.timedelta(minutes=currSchedule.durationList[iEntry]/2)
-            if textPosition.date() < xLimEnd and textPosition.date() > xLimStart:
+#            if textPosition.date() < xLimEnd and textPosition.date() > xLimStart: # if in xLim range
+            if now > startPoint and now < (startPoint + datetime.timedelta(minutes=currSchedule.durationList[iEntry])
+):  # if is current program
                 ax.text(textPosition, iSchedule, currProgram , rotation=0, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
             
         # plt.gcf().autofmt_xdate()
 
+
+# plot SWG schedule
+
+swg_schedule_color = dict(Common="IndianRed", Special="LightSalmon", Discretionary="DarkRed")
 iSchedule += 2
 for iEntry in range(len(swg_schedule.phaseNameList)):
     startPoint = swg_schedule.startTimeList[iEntry]
     duration = swg_schedule.durationInDays[iEntry].total_seconds()/3600/24
-    ax.barh(iSchedule,  duration, left=startPoint, align='center', height=1.6, color=plotColor)
+    ax.barh(iSchedule,  duration, left=startPoint, align='center', height=1.6, color=swg_schedule_color[swg_schedule.phaseNameList[iEntry].split(' ')[0]
+])
     textPosition = startPoint+swg_schedule.durationInDays[iEntry]/2
-    ax.text(textPosition, iSchedule, swg_schedule.phaseNameList[iEntry] , rotation=45, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
+    if textPosition.date() < xLimEnd and textPosition.date() > xLimStart and labelSWGschedule: # if in xLim range
+        printText = swg_schedule.phaseNameList[iEntry]
+        if "(see Note" in printText: # remove note
+            printText = printText[:printText.index("(see Note")-1]
+        ax.text(textPosition, iSchedule, printText , rotation=45, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
+
+
+if swg_plotNextMonth:
+    for iEntry in range(len(swg_schedule_nextMonth.phaseNameList)):
+        startPoint = swg_schedule_nextMonth.startTimeList[iEntry]
+        duration = swg_schedule_nextMonth.durationInDays[iEntry].total_seconds()/3600/24
+        ax.barh(iSchedule,  duration, left=startPoint, align='center', height=1.6, color=swg_schedule_color[swg_schedule_nextMonth.phaseNameList[iEntry].split(' ')[0]
+    ])
+        textPosition = startPoint+swg_schedule_nextMonth.durationInDays[iEntry]/2
+        if textPosition.date() < xLimEnd and textPosition.date() > xLimStart and labelSWGschedule: # if in xLim range
+            printText = swg_schedule_nextMonth.phaseNameList[iEntry]
+            if "(see Note" in printText: # remove note
+                printText = printText[:printText.index("(see Note")-1]
+            ax.text(textPosition, iSchedule, printText , rotation=45, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
   
-
+yTickList.append(iSchedule)
+yLabelList.append("SWG schedule")
             
+# plot line for now
+plt.plot([now, now], ax.get_ylim(), color='red', linewidth=3)
 
-plt.plot([now, now], [0, iSchedule+1], color='red')
+# format plot
 ax.set_xlim(xLimStart, xLimEnd)
-
-
 ax.xaxis.set_major_formatter( FuncFormatter(dateFormatter) ) 
 ax.grid(True)
 plt.xticks(rotation=0)
-ax.set_yticks(range(0, len(yLabelList)))
+ax.set_yticks(yTickList)
 ax.set_yticklabels(yLabelList)
+ax.set_xlabel("time")
+
 
 nowUTC   =  datetime.datetime.utcnow()
 nowLocal =  datetime.datetime.now()
-
 plt.title("Current now: {} (UTC)  || {}  (local)".format(nowUTC.strftime("%Y-%m-%d %H:%M"), nowLocal.strftime("%Y-%m-%d %H:%M")))
 
+#make legends
+import matplotlib.patches as mpatches
+allPrograms = controlProgramColor.keys()
+legendPatches = []
+for program in allPrograms:
+    legendPatches.append(mpatches.Patch(color=controlProgramColor[program], label=program))
 
-    
+legend_handle = plt.legend(handles=legendPatches, bbox_to_anchor=(1.025, 0.5), loc=2, borderaxespad=0.)
+
+ax.add_artist(legend_handle)
+
+allPrograms = swg_schedule_color.keys()
+legendPatches = []
+for program in allPrograms:
+    legendPatches.append(mpatches.Patch(color=swg_schedule_color[program], label=program))
+legend_handle = plt.legend(handles=legendPatches, bbox_to_anchor=(1.025, 1), loc=2, borderaxespad=0.)
+

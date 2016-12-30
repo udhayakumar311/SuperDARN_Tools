@@ -16,5 +16,10 @@ cat ~/.bashrc
 cat ~/bash_aliases
 firewall-cmd --list-all
 
+
+lspci
+pci -v
+
+
 # env
 
