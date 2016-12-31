@@ -1,3 +1,10 @@
+#!/usr/bin/python3
+# 
+# function to:
+#   - read UAF schedules form github and original SWG schedule
+#   - check UAF schedules for errrors
+#   - visualize schedules
+#
 # -*- coding: utf-8 -*-
 """
 Created on Mon Dec 26 11:48:59 2016
@@ -325,3 +332,4 @@ for program in allPrograms:
     legendPatches.append(mpatches.Patch(color=swg_schedule_color[program], label=program))
 legend_handle = plt.legend(handles=legendPatches, bbox_to_anchor=(1.025, 1), loc=2, borderaxespad=0.)
 
+plt.show()
