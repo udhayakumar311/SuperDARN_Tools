@@ -27,10 +27,13 @@ class scanClass():
     reObj_startScan           = re.compile("Starting scan.")
     reObj_ProgramStart        = re.compile("PROGRAM START->(.*)")
     reObj_endSND              = re.compile("Polling SND for exit.")
+
     reObj_doClearFreqSearch   = re.compile("Doing (?:SND ){0,1}clear frequency search.")
+  #  reObj_skipClearFreqSearch = re.compile("Clear Search Skipped, next search in .* secs")
+    reObj_clearFreqpar        = re.compile("FRQ: (\d*) (\d*)")
+
     reObj_nSequances          = re.compile("Number of (?:SND ){0,1}sequences: (\d*)")     
     reObj_integrateBeam       = re.compile("Integrating (?:SND ){0,1}beam:(\d{1,2}?) intt:(\d*)s.(\d*)us .*") 
-    reObj_clearFreqpar        = re.compile("FRQ: (\d*) (\d*)")
     reObj_txFreqAndNoise      = re.compile("Transmitting (?:SND ){0,1}on: (\d*) \(Noise=(.*)\)")
     reObj_snd_beamCount       = re.compile("SBC: (\d*)  SFC: (\d*)")
     reObj_newOptFreq          = re.compile("New Opt Freq; (\d*)")
@@ -38,7 +41,7 @@ class scanClass():
     
     
     # just ignore this messages
-    passLogList = ["Starting Integration.", "Setting SND beam.", "Sending SND messages.", "Opening new files.", "Waiting for scan boundary." ]
+    passLogList = ["Starting Integration.", "Setting SND beam.", "Sending SND messages.", "Opening new files.", "Waiting for scan boundary.", "Clear Search Skipped, next search in .* secs"]
     reObjList_pass = [re.compile(pattern) for pattern in passLogList]
     
     def __init__(self):
@@ -68,6 +71,8 @@ class scanClass():
         
         self.date_start = []
         self.date_end   = []
+        
+        self.set_scan_name()
         
     def parse_log_msg(self, msg, date):
         if self.reObj_startScan.match(msg):
@@ -145,30 +150,50 @@ class scanClass():
 
 
 class rbspscanSequence(scanClass):
-    pass
+    def set_scan_name(self):
+        self.program_name = "rbspscan"
 
 class normalsoundFastSequence(scanClass):
-    dev = True
+    def set_scan_name(self):
+        self.program_name = "normalsound (fast)"
+
+class normalscanFastSequence(scanClass):
+    def set_scan_name(self):
+        self.program_name = "normalscan (fast)"
+
+
+class themisscanSequence(scanClass):
+    def set_scan_name(self):
+        self.program_name = "themisscan"
+        
+        
+
 
 
 # %%
-controlProgramNames = ["normalsound (fast)", "rbspscan"]
+controlProgramNames = ["normalsound (fast)","normalscan (fast)", "rbspscan", "themisscan" ]
 
 dataProcesses = ["rawacfwrite","fitacfwrite", "rtserver" ]
 dataProcessIgnoreLogs = ["Opening file." , "Closing file.", "Reset.", "Child server process starting"]
 # %%
 
-errorLogFileName = '/home/mguski/Documents/exampleLogFiles/errlog.adw.a.20161221'
+
+fileName = "errlog.kod.c.20161230"
+#fileName = "errlog.adw.a.20161221"
+
+
+errorLogFileName = '/home/mguski/Documents/exampleLogFiles/' + fileName
+
 f = open(errorLogFileName)
 
-errorLogFileName = "/data/ros/errlog/errlog.adw.a.20161221" # TODO remove later
+errorLogFileName = "/data/ros/errlog/" + fileName # TODO remove later
+nLines = 0
 
-
-sequenceList = []
+scanList = []
 
 for line in f:
     line = line[:-1]
-    
+    nLines +=1
     if line.startswith(errorLogFileName) or len(line) == 0: # skip open messsage
         continue 
     
@@ -179,16 +204,29 @@ for line in f:
     if (processName in controlProgramNames):
         # like this re.sub(" \((.)", r'_\1', "abc (def)") ?
         if processName == "normalsound (fast)":
-            if len(sequenceList) == 0  or sequenceList[-1].sequenceFinished  or not isinstance(sequenceList[-1],  normalsoundFastSequence):
-                sequenceList.append(normalsoundFastSequence())    
-            sequenceList[-1].parse_log_msg(msg,date)
+            if len(scanList) == 0  or scanList[-1].sequenceFinished  or not isinstance(scanList[-1],  normalsoundFastSequence):
+                scanList.append(normalsoundFastSequence())    
+            scanList[-1].parse_log_msg(msg,date)
         elif processName == "rbspscan":
-            if len(sequenceList) == 0  or sequenceList[-1].sequenceFinished  or not isinstance(sequenceList[-1],  rbspscanSequence):
-                sequenceList.append(rbspscanSequence())    
-            sequenceList[-1].parse_log_msg(msg,date)
+            if len(scanList) == 0  or scanList[-1].scanList  or not isinstance(scanList[-1],  rbspscanSequence):
+                scanList.append(rbspscanSequence())    
+            scanList[-1].parse_log_msg(msg,date)
+        elif processName == "themisscan":
+            if len(scanList) == 0  or scanList[-1].sequenceFinished  or not isinstance(scanList[-1],  themisscanSequence):
+                scanList.append(themisscanSequence())    
+            scanList[-1].parse_log_msg(msg,date)
+        elif processName == "normalscan (fast)":
+            if len(scanList) == 0  or scanList[-1].sequenceFinished  or not isinstance(scanList[-1],  normalscanFastSequence):
+                scanList.append(normalscanFastSequence())    
+            scanList[-1].parse_log_msg(msg,date)
+        else:
+            print("Process: {} not implemnted".format(processName))
+
+            
+            
     elif processName in dataProcesses:
         if msg == "Received Data.":
-            sequenceList[-1].data_received( processName)
+            scanList[-1].data_received( processName)
         elif msg in dataProcessIgnoreLogs  or msg.endswith(" Open Connection.") or msg.endswith(" Close Connection."):
             pass
         else:
@@ -199,3 +237,97 @@ for line in f:
         time.sleep(1)
 
 f.close()   
+
+
+print("Finished:\n  nLines: {}\n  nSequences: {}\n\n".format(nLines, len(scanList)))
+
+# %%
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+
+
+fig = plt.figure(figsize=[16, 10])
+
+# -%% plot some things
+
+timeVec = [seq.date_start  for seq in scanList]
+
+
+scanChangeList = [[scanList[0].program_name, scanList[0].date_start]]
+for iScan in range(1,len(scanList)):
+    if scanChangeList[-1][0] != scanList[iScan].program_name:
+        scanChangeList.append([scanList[iScan].program_name, scanList[iScan].date_start])
+scanChangeList.append(["End of Log file", timeVec[-1]])
+
+ax = plt.subplot2grid((20,1), (0,0))
+for iScan in range(len(scanChangeList)-1):
+    ax.barh(1,  (scanChangeList[iScan+1][1] - scanChangeList[iScan][1]).total_seconds()/60/60/24, left=scanChangeList[iScan][1], align='center')
+    textPosition = scanChangeList[iScan][1] +  (scanChangeList[iScan+1][1] - scanChangeList[iScan][1])/2
+    ax.text(textPosition, 1, scanChangeList[iScan][0] , rotation=0, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
+    
+ax.set_xlim(timeVec[0], timeVec[-1])
+ax.axis('off')
+plt.title(errorLogFileName.split("/")[-1][7:12] + "  " + str(timeVec[0].date()))
+
+# -%%
+ax = plt.subplot2grid((20,1), (1,0), rowspan=3)
+
+nSeqPerSecList = [seq.nSequences for seq in scanList]
+plt.plot(timeVec, nSeqPerSecList, "+")
+plt.grid(True)
+ax.set_xticklabels([])
+
+ax.set_ylabel("seq / sec")
+
+ax = plt.subplot2grid((5,1), (1,0))
+freqVec = [seq.tx_freq/1000 for seq in scanList]
+plt.plot(timeVec, freqVec, '+')
+plt.grid(True)
+ax.set_xticklabels([])
+ax.set_ylabel("Freq in MHz")
+
+
+ax = plt.subplot2grid((5,1), (2,0))
+#noiseVec = 10*np.log10([seq.noise for seq in scanList])
+noiseVec = [seq.noise for seq in scanList]
+plt.plot(timeVec, noiseVec, 'o')
+plt.grid(True)
+ax.set_xticklabels([])
+ax.set_ylabel("Noise in dB ???")
+
+
+ax = plt.subplot2grid((5,1), (3,0))
+plotData = [seq.beamNumber for seq in scanList]
+plt.plot(timeVec, plotData, '|')
+plt.grid(True)
+ax.set_xticklabels([])
+ax.set_ylabel("beam number")
+
+
+ax = plt.subplot2grid((5,1), (4,0))
+plotData = [seq.snd_beam_count for seq in scanList]
+plt.plot(timeVec, plotData, 'x', label="snd_beam_count")
+plotData = [seq.snd_freq_count for seq in scanList]
+plt.plot(timeVec, plotData, '+', label="snd_freq_count")
+
+
+ax = plt.subplot2grid((5,1), (4,0))
+plotData = [seq.intus/1e6 for seq in scanList]
+plt.plot(timeVec, plotData, label="insus", linewidth=2)
+plotData = [seq.intsc for seq in scanList]
+plt.plot(timeVec, plotData, label="inssc", linewidth=2)
+ax.set_ylim(ax.get_ylim()[0]-0.1 , ax.get_ylim()[1]+0.1)
+
+plt.grid(True)
+
+ax.set_ylabel("intt in s")
+plt.legend()
+
+
+
+plt.show()
+
+# %%
+plotData = [(seq.date_end - seq.date_start).total_seconds() for seq in scanList]
