@@ -5,12 +5,18 @@ Created on Fri Dec 30 12:57:31 2016
 
 @author: mguski
 """
+# TODO
+# write fuctions: 
+# parese_file
+# parse_file_and_save_to_file
+# plot overview
 
 # %%
 
 
 import re
 import datetime
+import matplotlib.pyplot as plt
 
 UNKNOWN  = -1
 DEBUG    = 10
@@ -37,14 +43,15 @@ class scanClass():
     reObj_txFreqAndNoise      = re.compile("Transmitting (?:SND ){0,1}on: (\d*) \(Noise=(.*)\)")
     reObj_snd_beamCount       = re.compile("SBC: (\d*)  SFC: (\d*)")
     reObj_newOptFreq          = re.compile("New Opt Freq; (\d*)")
-    reObj_connectionInfos     = re.compile("Error attaching to .*|Attached to .*")
+    reObj_connectionInfos     = re.compile("Error attaching to .*")
     
     
     # just ignore this messages
-    passLogList = ["Starting Integration.", "Setting SND beam.", "Sending SND messages.", "Opening new files.", "Waiting for scan boundary.", "Clear Search Skipped, next search in .* secs"]
+    passLogList = ["Starting Integration.", "Setting SND beam.", "Sending SND messages.", "Opening new files.", "Waiting for scan boundary.", "Clear Search Skipped, next search in .* secs", "Attached to .*"]
     reObjList_pass = [re.compile(pattern) for pattern in passLogList]
     
-    def __init__(self):
+    def __init__(self, programName):
+        self.programName = programName
         self.isStartOfScan = False
         self.beamNumber = -1
         self.intsc = -1
@@ -71,8 +78,6 @@ class scanClass():
         
         self.date_start = []
         self.date_end   = []
-        
-        self.set_scan_name()
         
     def parse_log_msg(self, msg, date):
         if self.reObj_startScan.match(msg):
@@ -118,8 +123,8 @@ class scanClass():
             
         else:
             print("Unknown log msg:{} {} ".format(date, msg))
-            import time            
-            time.sleep(1)
+           # import time            
+           # time.sleep(1)
             date = []
 
         self.add_date(date)
@@ -146,27 +151,6 @@ class scanClass():
            self.date_end = date
         else:
            self.date_end = max(self.date_end, date)
-           
-
-
-class rbspscanSequence(scanClass):
-    def set_scan_name(self):
-        self.program_name = "rbspscan"
-
-class normalsoundFastSequence(scanClass):
-    def set_scan_name(self):
-        self.program_name = "normalsound (fast)"
-
-class normalscanFastSequence(scanClass):
-    def set_scan_name(self):
-        self.program_name = "normalscan (fast)"
-
-
-class themisscanSequence(scanClass):
-    def set_scan_name(self):
-        self.program_name = "themisscan"
-        
-        
 
 
 
@@ -179,6 +163,8 @@ dataProcessIgnoreLogs = ["Opening file." , "Closing file.", "Reset.", "Child ser
 
 
 fileName = "errlog.kod.c.20161230"
+
+fileName = "errlog.kod.d.20161230"
 #fileName = "errlog.adw.a.20161221"
 
 
@@ -202,27 +188,11 @@ for line in f:
     processName = processName.strip()
     
     if (processName in controlProgramNames):
-        # like this re.sub(" \((.)", r'_\1', "abc (def)") ?
-        if processName == "normalsound (fast)":
-            if len(scanList) == 0  or scanList[-1].sequenceFinished  or not isinstance(scanList[-1],  normalsoundFastSequence):
-                scanList.append(normalsoundFastSequence())    
-            scanList[-1].parse_log_msg(msg,date)
-        elif processName == "rbspscan":
-            if len(scanList) == 0  or scanList[-1].scanList  or not isinstance(scanList[-1],  rbspscanSequence):
-                scanList.append(rbspscanSequence())    
-            scanList[-1].parse_log_msg(msg,date)
-        elif processName == "themisscan":
-            if len(scanList) == 0  or scanList[-1].sequenceFinished  or not isinstance(scanList[-1],  themisscanSequence):
-                scanList.append(themisscanSequence())    
-            scanList[-1].parse_log_msg(msg,date)
-        elif processName == "normalscan (fast)":
-            if len(scanList) == 0  or scanList[-1].sequenceFinished  or not isinstance(scanList[-1],  normalscanFastSequence):
-                scanList.append(normalscanFastSequence())    
-            scanList[-1].parse_log_msg(msg,date)
-        else:
-            print("Process: {} not implemnted".format(processName))
 
-            
+        if len(scanList) == 0  or scanList[-1].sequenceFinished  or scanList[-1].programName != processName:
+            scanList.append(scanClass(processName))    
+        scanList[-1].parse_log_msg(msg,date)
+
             
     elif processName in dataProcesses:
         if msg == "Received Data.":
@@ -242,92 +212,166 @@ f.close()
 print("Finished:\n  nLines: {}\n  nSequences: {}\n\n".format(nLines, len(scanList)))
 
 # %%
-import matplotlib.pyplot as plt
-import numpy as np
-
-
-
-
-fig = plt.figure(figsize=[16, 10])
-
-# -%% plot some things
 
 timeVec = [seq.date_start  for seq in scanList]
 
-
-scanChangeList = [[scanList[0].program_name, scanList[0].date_start]]
+scanChangeList = [[scanList[0].programName, scanList[0].date_start]]
 for iScan in range(1,len(scanList)):
-    if scanChangeList[-1][0] != scanList[iScan].program_name:
-        scanChangeList.append([scanList[iScan].program_name, scanList[iScan].date_start])
+    if scanChangeList[-1][0] != scanList[iScan].programName:
+        scanChangeList.append([scanList[iScan].programName, scanList[iScan].date_start])
 scanChangeList.append(["End of Log file", timeVec[-1]])
 
-ax = plt.subplot2grid((20,1), (0,0))
-for iScan in range(len(scanChangeList)-1):
-    ax.barh(1,  (scanChangeList[iScan+1][1] - scanChangeList[iScan][1]).total_seconds()/60/60/24, left=scanChangeList[iScan][1], align='center')
-    textPosition = scanChangeList[iScan][1] +  (scanChangeList[iScan+1][1] - scanChangeList[iScan][1])/2
-    ax.text(textPosition, 1, scanChangeList[iScan][0] , rotation=0, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
-    
-ax.set_xlim(timeVec[0], timeVec[-1])
-ax.axis('off')
-plt.title(errorLogFileName.split("/")[-1][7:12] + "  " + str(timeVec[0].date()))
+# %% plot some things
+
+fig = plt.figure(figsize=[16, 10])
+
+
 
 # -%%
 ax = plt.subplot2grid((20,1), (1,0), rowspan=3)
-
 nSeqPerSecList = [seq.nSequences for seq in scanList]
 plt.plot(timeVec, nSeqPerSecList, "+")
+ax.set_ylabel("seq / sec")
 plt.grid(True)
 ax.set_xticklabels([])
+masterAx = ax
 
-ax.set_ylabel("seq / sec")
+ax = plt.subplot2grid((20,1), (0,0), sharex=masterAx)
+for iScan in range(len(scanChangeList)-1):
+    ax.barh(1,  (scanChangeList[iScan+1][1] - scanChangeList[iScan][1]).total_seconds()/60/60/24, left=scanChangeList[iScan][1], align='center')
+    textPosition = scanChangeList[iScan][1] +  (scanChangeList[iScan+1][1] - scanChangeList[iScan][1])/2
+    ax.text(textPosition, 1, scanChangeList[iScan][0] , rotation=0, backgroundcolor='w', alpha=0.5, ha='center', va='center' )    
+#ax.set_xlim(timeVec[0], timeVec[-1])
+ax.axis('off')
+plt.title(errorLogFileName.split("/")[-1][7:12] + "  " + str(timeVec[0].date()))
 
-ax = plt.subplot2grid((5,1), (1,0))
+
+ax = plt.subplot2grid((5,1), (1,0), sharex=masterAx)
 freqVec = [seq.tx_freq/1000 for seq in scanList]
 plt.plot(timeVec, freqVec, '+')
+ax.set_ylabel("Freq in MHz")
 plt.grid(True)
 ax.set_xticklabels([])
-ax.set_ylabel("Freq in MHz")
 
 
-ax = plt.subplot2grid((5,1), (2,0))
-#noiseVec = 10*np.log10([seq.noise for seq in scanList])
+ax = plt.subplot2grid((5,1), (2,0), sharex=masterAx)
 noiseVec = [seq.noise for seq in scanList]
 plt.plot(timeVec, noiseVec, 'o')
 plt.grid(True)
 ax.set_xticklabels([])
-ax.set_ylabel("Noise in dB ???")
+ax.set_ylabel("Noise energy ???")
 
 
-ax = plt.subplot2grid((5,1), (3,0))
+ax = plt.subplot2grid((5,1), (3,0), sharex=masterAx)
 plotData = [seq.beamNumber for seq in scanList]
 plt.plot(timeVec, plotData, '|')
+ax.set_ylabel("beam number")
 plt.grid(True)
 ax.set_xticklabels([])
-ax.set_ylabel("beam number")
 
 
-ax = plt.subplot2grid((5,1), (4,0))
-plotData = [seq.snd_beam_count for seq in scanList]
-plt.plot(timeVec, plotData, 'x', label="snd_beam_count")
-plotData = [seq.snd_freq_count for seq in scanList]
-plt.plot(timeVec, plotData, '+', label="snd_freq_count")
-
-
-ax = plt.subplot2grid((5,1), (4,0))
+ax = plt.subplot2grid((5,1), (4,0), sharex=masterAx)
 plotData = [seq.intus/1e6 for seq in scanList]
 plt.plot(timeVec, plotData, label="insus", linewidth=2)
 plotData = [seq.intsc for seq in scanList]
 plt.plot(timeVec, plotData, label="inssc", linewidth=2)
 ax.set_ylim(ax.get_ylim()[0]-0.1 , ax.get_ylim()[1]+0.1)
-
-plt.grid(True)
-
 ax.set_ylabel("intt in s")
+plt.grid(True)
 plt.legend()
 
+
+plt.show()
+
+# %% plot some things
+
+fig = plt.figure(figsize=[16, 10])
+# -%%
+
+ax = plt.subplot2grid((5,1), (1,0))
+ax = masterAx
+freqVec = [seq.newOptFreq for seq in scanList]
+plt.plot(timeVec, freqVec, '+')
+ax.set_ylabel("New opt freq")
+plt.grid(True)
+ax.set_xticklabels([])
+ax.set_ylim(max(ax.get_ylim()[0], 0) , max(ax.get_ylim()[1], 1))
+
+ax = plt.subplot2grid((20,1), (0,0), sharex=masterAx)
+for iScan in range(len(scanChangeList)-1):
+    ax.barh(1,  (scanChangeList[iScan+1][1] - scanChangeList[iScan][1]).total_seconds()/60/60/24, left=scanChangeList[iScan][1], align='center')
+    textPosition = scanChangeList[iScan][1] +  (scanChangeList[iScan+1][1] - scanChangeList[iScan][1])/2
+    ax.text(textPosition, 1, scanChangeList[iScan][0] , rotation=0, backgroundcolor='w', alpha=0.5, ha='center', va='center' )    
+ax.set_xlim(timeVec[0], timeVec[-1])
+ax.axis('off')
+plt.title(errorLogFileName.split("/")[-1][7:12] + "  " + str(timeVec[0].date()))
+
+ax = plt.subplot2grid((20,1), (1,0), rowspan=3, sharex=masterAx)
+for seq in scanList:
+    if seq.connectionInfos != []:
+        ax.text(seq.date_start, 0, "\n".join(seq.connectionInfos))
+        plt.plot([seq.date_start, seq.date_start], [0,1])
+ax.set_xlim(timeVec[0], timeVec[-1])
+ax.set_ylabel("connection messages")
+plt.grid(True)
+ax.set_xticklabels([])
+ax.axis('off')
+
+ax = plt.subplot2grid((5,1), (2,0), sharex=masterAx)
+cf_start = []
+cf_range = []
+for seq in scanList:
+    if seq.clearFreq_start == -1:
+        cf_start.append(None)
+        cf_range.append(None)
+    else:
+        cf_start.append(seq.clearFreq_start/1000 )   
+        cf_range.append((seq.clearFreq_range)/1000)      
+
+plt.errorbar(timeVec, cf_start, yerr=cf_range, capsize=0, fmt="none")
+plt.grid(True)
+ax.set_xticklabels([])
+ax.set_ylabel("Clear Freq (in Mhz)")
+ax.set_ylim([max(ax.get_ylim()[0]-1,8), min(ax.get_ylim()[1]+2,18)])
+
+
+ax = plt.subplot2grid((5,1), (3,0), sharex=masterAx)
+plotData = [seq.data_received_rawacfwrite for seq in scanList]
+plt.plot(timeVec, plotData, 'x', label='rawacfwrite')
+plotData = [float(seq.data_received_fitacfwrite)+0.1 for seq in scanList]
+plt.plot(timeVec, plotData, 'x', label='fitacfwrite')
+plotData = [float(seq.data_received_rtserver)-0.1 for seq in scanList]
+plt.plot(timeVec, plotData, 'x', label='rtserver')
+ax.set_ylabel("data received")
+ax.set_ylim(-0.15 ,1.15)
+ax.set_yticks([0,1])
+ax.set_yticklabels(["no", "yes"])
+plt.grid(True)
+plt.legend()
+ax.set_xticklabels([])
+
+
+
+
+ax = plt.subplot2grid((5,1), (4,0), sharex=masterAx)
+plotData = [seq.snd_beam_count for seq in scanList]
+plt.plot(timeVec, plotData, 'x', label="snd_beam_count")
+plotData = [seq.snd_freq_count for seq in scanList]
+plt.plot(timeVec, plotData, '+', label="snd_freq_count")
+ax.set_ylim(-0.1 , max(ax.get_ylim()[1], 1))
+ax.set_ylabel("SND Mode")
+plt.grid(True)
+plt.legend()
 
 
 plt.show()
 
 # %%
-plotData = [(seq.date_end - seq.date_start).total_seconds() for seq in scanList]
+
+#self.isStartOfScan = False
+#self.sequenceFinished = False
+#self.program_start = ""
+#self.date_start = []
+#self.date_end   = []
+        
+
