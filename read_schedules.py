@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # 
 # function to:
-#   - read UAF schedules form github and original SWG schedule
+#   - read UAF schedules from github and original SWG schedule
 #   - check UAF schedules for errrors
 #   - visualize schedules
 #
@@ -87,7 +87,7 @@ def read_schedule(url_schedule, checkForGaps=True):
             
     if not 'stationid' in parameterDict.keys():
         print('No stationid defined in {}. '.format(url_schedule))
-        print("Assuming channel {} (form file name)!".format(url_schedule.split("/")[-1][0:3]))
+        print("Assuming channel {} (from file name)!".format(url_schedule.split("/")[-1][0:3]))
         parameterDict['stationid'] = url_schedule.split("/")[-1][0:3]
 
 
@@ -214,9 +214,10 @@ for radar_file_list in schedule_file_list:
 now = datetime.datetime.now()
 swg_schedule = read_swg_schedule(now.month, now.year)
 
-swg_plotNextMonth = True
-nextMonth = now + datetime.timedelta(days=30)
-swg_schedule_nextMonth = read_swg_schedule(nextMonth.month, nextMonth.year)
+swg_plotNextMonth = now.day > 15
+if swg_plotNextMonth:
+    nextMonth = now + datetime.timedelta(days=30)
+    swg_schedule_nextMonth = read_swg_schedule(nextMonth.month, nextMonth.year)
 # %%
 
 plotRange = [-1, 3] # in days from today

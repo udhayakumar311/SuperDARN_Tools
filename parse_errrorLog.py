@@ -80,6 +80,8 @@ class scanClass():
         self.date_end   = []
         
     def parse_log_msg(self, msg, date):
+        unknownMessage = False
+        
         if self.reObj_startScan.match(msg):
             self.isStartOfScan = True
         elif any([re.match(msg) for re in self.reObjList_pass]):
@@ -125,9 +127,12 @@ class scanClass():
             print("Unknown log msg:{} {} ".format(date, msg))
            # import time            
            # time.sleep(1)
-            date = []
+            unknownMessage = True
 
-        self.add_date(date)
+        if not unknownMessage:
+            self.add_date(date)
+            
+        return unknownMessage
             
     def data_received(self, process):
         if process == 'rawacfwrite':
@@ -155,61 +160,91 @@ class scanClass():
 
 
 # %%
-controlProgramNames = ["normalsound (fast)","normalscan (fast)", "rbspscan", "themisscan" ]
 
-dataProcesses = ["rawacfwrite","fitacfwrite", "rtserver" ]
-dataProcessIgnoreLogs = ["Opening file." , "Closing file.", "Reset.", "Child server process starting"]
+def parse_errlog_file(errorLogFileName):
+    controlProgramNames = ["normalsound (fast)","normalscan (fast)", "rbspscan", "themisscan" ] # known and tested control programs
+    dataProcesses       = ["rawacfwrite","fitacfwrite", "rtserver" ]
+    dataProcessIgnoreLogs = ["Opening file." , "Closing file.", "Reset.", "Child (S|s)erver process (starting|terminating)", "\[.*\] : (Open|Close) Connection.", "(Parent|Child) PID \d*", "Listening on port \d*."]
+    
+    dataProcessIgnoreLogs_re = [re.compile(s) for s in dataProcessIgnoreLogs]
+    re_errlog_openMsg = re.compile("/.*/" + errorLogFileName.split("/")[-1] + " opened at .*")
+    
+    scanList = []
+    unknownLogs = []
+    
+    f = open(errorLogFileName)
+    nLines = 0
+    
+    for line in f:
+        line = line[:-1]
+        nLines +=1
+        if re_errlog_openMsg.match(line) or len(line) == 0: # skip open messsage
+            continue 
+        
+        date = datetime.datetime.strptime(line[:24], '%a %b %d %H:%M:%S %Y')
+        processName, msg = line[26:].split(":",1)
+        processName = processName.strip()
+        
+        if (processName in controlProgramNames):
+    
+            if len(scanList) == 0  or scanList[-1].sequenceFinished  or scanList[-1].programName != processName:
+                scanList.append(scanClass(processName))    
+            msgUnkown = scanList[-1].parse_log_msg(msg,date)
+            if msgUnkown:
+                unknownLogs.append(line)
+    
+                
+        elif processName in dataProcesses:
+            if msg == "Received Data.":
+                scanList[-1].data_received( processName)
+            elif any([re.match(msg) for re in dataProcessIgnoreLogs_re]):    
+                pass
+            else:
+                print("Unknow msg: " + line)
+                unknownLogs.append(line)
+        else:
+            print("Unknown process: {}".format(processName))
+            import time 
+            time.sleep(1)
+    
+    f.close()   
+    
+    print("Finished:\n  nLines:        {}\n  nSequences:    {}\n  unknown lines: {}\n".format(nLines, len(scanList), len(unknownLogs)))
+    
+    return scanList, unknownLogs
+
 # %%
-
 
 fileName = "errlog.kod.c.20161230"
 
 fileName = "errlog.kod.d.20161230"
 #fileName = "errlog.adw.a.20161221"
-
-
 errorLogFileName = '/home/mguski/Documents/exampleLogFiles/' + fileName
 
-f = open(errorLogFileName)
 
-errorLogFileName = "/data/ros/errlog/" + fileName # TODO remove later
-nLines = 0
-
-scanList = []
-
-for line in f:
-    line = line[:-1]
-    nLines +=1
-    if line.startswith(errorLogFileName) or len(line) == 0: # skip open messsage
-        continue 
-    
-    date = datetime.datetime.strptime(line[:24], '%a %b %d %H:%M:%S %Y')
-    processName, msg = line[26:].split(":",1)
-    processName = processName.strip()
-    
-    if (processName in controlProgramNames):
-
-        if len(scanList) == 0  or scanList[-1].sequenceFinished  or scanList[-1].programName != processName:
-            scanList.append(scanClass(processName))    
-        scanList[-1].parse_log_msg(msg,date)
-
-            
-    elif processName in dataProcesses:
-        if msg == "Received Data.":
-            scanList[-1].data_received( processName)
-        elif msg in dataProcessIgnoreLogs  or msg.endswith(" Open Connection.") or msg.endswith(" Close Connection."):
-            pass
-        else:
-            print("Unknow msg: " + line)
-    else:
-        print("Unknown process: {}".format(processName))
-        import time 
-        time.sleep(1)
-
-f.close()   
+scanList, unknownLogs = parse_errlog_file(errorLogFileName)
 
 
-print("Finished:\n  nLines: {}\n  nSequences: {}\n\n".format(nLines, len(scanList)))
+#%%
+import pickle
+
+# obj0, obj1, obj2 are created here...
+
+# Saving the objects:
+pickleFileName = errorLogFileName + '_parsed.pickle'
+with open(pickleFileName, 'wb') as f:
+    pickle.dump([scanList, unknownLogs], f)
+
+import gzip
+import shutil
+with open(pickleFileName, 'rb') as f_in:
+    with gzip.open(pickleFileName + '.gzip', 'wb') as f_out:
+        shutil.copyfileobj(f_in, f_out)
+
+
+# Getting back the objects:
+with open('objs.pickle', 'rb') as f:  # Python 3: open(..., 'rb')
+    scanList, unknownLogs = pickle.load(f)
 
 # %%
 
