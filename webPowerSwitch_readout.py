@@ -18,16 +18,28 @@ WARNING  = 30
 ERROR    = 40
 CRITICAL = 50
 FATAL    = 60 
+
+# define font color and style
+HEADER = '\033[95m'
+OKBLUE = '\033[94m'
+OKGREEN = '\033[92m'
+WARNING = '\033[93m'
+FAIL = '\033[91m'
+ENDC = '\033[0m'
+BOLD = '\033[1m'
+UNDERLINE = '\033[4m'
+
+level2colorDict = dict(UNKNOWN=FAIL)
+
 # %%
 
 class logMessages():
-    source = ""
-    dateList = []
-    levelList = []
-    msgList = []
-    
+   
     def __init__(self, source):
         self.source = source
+        self.dateList = []
+        self.levelList = []
+        self.msgList = []
         
     def add_log(self,  level, msg , date=datetime.datetime.now()):
         self.dateList.append(date.replace(microsecond=0))

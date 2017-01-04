@@ -40,7 +40,8 @@ def read_schedule(url_schedule, checkForGaps=True):
     schedule_txt = urllib.request.urlopen(url_schedule)
     parameterList = ['path', 'default', 'stationid', 'sitelib', 'channel', 'priority', 'duration']
     parameterDict = dict()
-    if not 'campaign' in url_schedule:
+    isMainFile = not (('special' in url_schedule) or ('campaign' in url_schedule))
+    if isMainFile:
         while True:
             currLine = schedule_txt.readline().decode('utf-8')[:-1] 
             if len(currLine) == 0:
@@ -64,13 +65,20 @@ def read_schedule(url_schedule, checkForGaps=True):
             continue
         if line.split(" ")[0] in parameterList:
             parameterDict[line.split(" ")[0]] = line[len(line.split(" ")[0])+1:]
-            print("Parameter {} in in the middle of the file! ({})".format(line.split(" ")[0], url_schedule))
+            if isMainFile:
+                print("Parameter {} in in the middle of the file! ({})".format(line.split(" ")[0], url_schedule))
             continue
         try: 
-            startTimeList.append(datetime.datetime.strptime(line[:16], "%Y %m %d %H %M"))
-            durationList.append(int(line[16:23]))
-            priorityList.append(int(line[23:27]))
-            controlProgramList.append( line[28:-1])
+           # startTimeList.append(datetime.datetime.strptime(line[:16], "%Y %m %d %H %M"))
+           # durationList.append(int(line[16:23]))
+           # priorityList.append(int(line[23:27]))
+           # controlProgramList.append( line[28:-1])
+            
+            elements = [element for element in line.split(' ') if element !=""]
+            startTimeList.append(datetime.datetime(int(elements[0]), int(elements[1]), int(elements[2]), int(elements[3]), int(elements[4])))
+            durationList.append(int(elements[5]))
+            priorityList.append(int(elements[6]))
+            controlProgramList.append( " ".join(elements[7:]))
         except:
             print("Error for parsing line:\n  {}  from file {}".format(line, url_schedule))
             
@@ -81,19 +89,21 @@ def read_schedule(url_schedule, checkForGaps=True):
     errorFound = False
 
     if not 'channel' in parameterDict.keys():
-        print('No channel defined in {}. '.format(url_schedule))
-        print("Assuming channel {} (from file name)!".format(url_schedule.split("/")[-1][4:5]))
+        if isMainFile:
+            print('No channel defined in {}. '.format(url_schedule))
+            print("Assuming channel {} (from file name)!".format(url_schedule.split("/")[-1][4:5]))
         parameterDict['channel'] = url_schedule.split("/")[-1][4:5]
             
     if not 'stationid' in parameterDict.keys():
-        print('No stationid defined in {}. '.format(url_schedule))
-        print("Assuming channel {} (from file name)!".format(url_schedule.split("/")[-1][0:3]))
+        if isMainFile:
+            print('No stationid defined in {}. '.format(url_schedule))
+            print("Assuming channel {} (from file name)!".format(url_schedule.split("/")[-1][0:3]))
         parameterDict['stationid'] = url_schedule.split("/")[-1][0:3]
 
 
     
     # check for gapless and non overlapping schedule
-    if checkForGaps:
+    if checkForGaps and isMainFile:
         for iEntry in range(nEntries-1):
             endTime = startTimeList[iEntry] + datetime.timedelta( minutes=durationList[iEntry])
             if not (endTime == startTimeList[iEntry+1]):
@@ -199,7 +209,8 @@ def read_swg_schedule(month, year):
 
 root_schedule_url = 'https://raw.githubusercontent.com/UAF-SuperDARN-OPS/schedule_files/'
 
-schedule_file_list = [["adak/ade/ade.a.scd"], ["adak/adw/adw.a.scd"], ["kodiak/kod/kod.c.scd", "kodiak/kod/kod.c.campaign.scd"], ["kodiak/kod/kod.d.scd", "kodiak/kod/kod.d.campaign.scd"], ['mcmurdo/mcm/mcm.a.scd'], ['mcmurdo/mcm/mcm.b.scd'], ['southpole/sps/sps.a.scd']]
+schedule_file_list = [["adak/ade/ade.a.scd", "adak/ade/ade.a.special"], ["adak/adw/adw.a.scd", "adak/adw/adw.a.special"], ["kodiak/kod/kod.c.scd", "kodiak/kod/kod.c.campaign.scd"], ["kodiak/kod/kod.d.scd", "kodiak/kod/kod.d.campaign.scd"], ['mcmurdo/mcm/mcm.a.scd'], ['mcmurdo/mcm/mcm.b.scd'], ['southpole/sps/sps.a.scd']]
+#schedule_file_list = [[]]
 #, 'kodiak/kod/kod.c.campaign.scd', 'kodiak/kod/kod.d.campaign.scd'
 schedule_file_list.reverse() # reverse order to have adak at the top
 schedule_list = []
@@ -229,7 +240,7 @@ labelSWGschedule = True
 fig = plt.figure(figsize=[16, 10])
 ax = plt.subplot2grid((1,9), (0,0), colspan=8)
 
-controlProgramColor = dict(normalscan="limegreen", normalsound="darkolivegreen", themisscan='royalblue', pcodescan_15km='purple',  codescan_15km="magenta" ,rbspscan='orange', iwd_normalscan='y',noopscan='gray', iwdscan='darkturquoise')
+controlProgramColor = dict(normalscan="limegreen", normalsound="darkolivegreen", themisscan='royalblue', pcodescan_15km='purple',  codescan_15km="magenta", pcodescan='indigo' ,rbspscan='orange', iwd_normalscan='y',noopscan='lightgray', iwdscan='darkturquoise', interleavescan='springgreen', spaletascan='yellow')
 
 yLabelList = []
 yTickList = []
@@ -240,7 +251,10 @@ xLimStart = now.date() + datetime.timedelta(days=plotRange[0])
 xLimEnd = now.date() + datetime.timedelta(days=plotRange[1])
 
 for iRadar in range(len(schedule_list)):
-    iSchedule += 0.5
+    if iRadar == 0 or schedule_file_list[iRadar][0].split("/")[-1][:1] != schedule_file_list[iRadar-1][0].split("/")[-1][:1]:
+        iSchedule += 1
+    else:
+        iSchedule += 0.3
     for iSchedInRadar, currSchedule in enumerate(schedule_list[iRadar]):
         iSchedule += 0.8
         yLabelList.append(schedule_file_list[iRadar][iSchedInRadar].split("/")[-1][:-4])
@@ -256,7 +270,7 @@ for iRadar in range(len(schedule_list)):
                 plotColor = 'gray'
             startPoint = currSchedule.startTimeList[iEntry]
             duration = currSchedule.durationList[iEntry]/60/24
-            ax.barh(iSchedule,  duration, left=startPoint, align='center', color=plotColor)
+            ax.barh(iSchedule,  duration, left=startPoint, align='center', color=plotColor, alpha=0.75)
             textPosition = startPoint+datetime.timedelta(minutes=currSchedule.durationList[iEntry]/2)
 #            if textPosition.date() < xLimEnd and textPosition.date() > xLimStart: # if in xLim range
             if now > startPoint and now < (startPoint + datetime.timedelta(minutes=currSchedule.durationList[iEntry])
