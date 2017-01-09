@@ -19,17 +19,20 @@ ERROR    = 40
 CRITICAL = 50
 FATAL    = 60 
 
-# define font color and style
-HEADER = '\033[95m'
-OKBLUE = '\033[94m'
-OKGREEN = '\033[92m'
-WARNING = '\033[93m'
-FAIL = '\033[91m'
-ENDC = '\033[0m'
-BOLD = '\033[1m'
-UNDERLINE = '\033[4m'
+levelValueList = [UNKNOWN, DEBUG,INFO, WARNING, ERROR, CRITICAL, FATAL]
+levelNameList = ['UNKNOWN', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', 'FATAL']
 
-level2colorDict = dict(UNKNOWN=FAIL)
+# define font color and style
+cHEADER = '\033[95m'
+cOKBLUE = '\033[94m'
+cOKGREEN = '\033[92m'
+cWARNING = '\033[93m'
+cFAIL = '\033[91m'
+cENDC = '\033[0m'
+cBOLD = '\033[1m'
+cUNDERLINE = '\033[4m'
+
+#level2colorDict = dict(UNKNOWN=FAIL)
 
 # %%
 
@@ -50,11 +53,11 @@ class logMessages():
         self.sort_log()
         
         for iLog in range(self.nLogs):
-            if self.levelList[iLog] >= level:
-                print("{} {} {}".format(self.dateList[iLog], self.levelList[iLog], self.msgList[iLog]))
+            if self.levelList[iLog] >= level or self.levelList[iLog] == UNKNOWN:
+                print("{} {: <8} {}".format(self.dateList[iLog], levelNameList[levelValueList.index(self.levelList[iLog])], self.msgList[iLog]))
         
     def sort_log(self):
-        print("TODO")
+        print("TODO sort logs")
         
 
     @property    
@@ -141,7 +144,7 @@ def check_outlet_status(logs, outletStatus):
             
 def check_log_messages(logs, allLogLines, lastKnownPowerLoss):
     # part 1: rating of log messages
-    debugPatterList = ['.*: Successful .* authentication for .* from .*', '.* has logged out from .*', '.* System time set by hardware clock .*', '.* booted OK.*']
+    debugPatterList = ['.*: Successful .* authentication for .* from .*', '.* has logged out from .*', '.* System time set by hardware clock .*', '.* booted OK.*', '.*: Network cable [plugged in|unplugged]', '.* Session for .* is timed out']
     infoPatternList = ['.* has changed .*', '.*: WebI: .* has requested to .*', '.*: Outlet .* is .*']
     lastPowerLoss = "NO ENTRY"
     nFailedAuthentications = 0
@@ -173,7 +176,7 @@ def check_log_messages(logs, allLogLines, lastKnownPowerLoss):
                 line += "<== Configuration Error: Not all Outlets will turn on after power loss. Change in web interface to ALL OUTLETS ON!"
                 parse_date_and_add_log(logs, line, ERROR )
             continue
-        print(line)
+        print("Unknwn : "  + line)
         parse_date_and_add_log(logs, line, UNKNOWN ) 
     
     # PART 2: analysis

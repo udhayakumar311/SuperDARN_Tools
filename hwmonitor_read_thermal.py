@@ -3,6 +3,7 @@
 import os
 import glob 
 
+
 # %%
 def read_hardware_monitor_status(hwmonPath = "/sys/class/hwmon/"):
     allDirs = os.listdir(hwmonPath)
@@ -44,13 +45,45 @@ def read_hardware_monitor_status(hwmonPath = "/sys/class/hwmon/"):
                 
             print("{}: {: <8} {: >15} = {: >5} C,  status: {}".format(currDir,hwmonName, sensorName, temp , status))
             output.append(dict(dirName=currDir,hwmonName=hwmonName, sensorName=sensorName, temperature=temp, status=status ))
-        
+            
     return output
+# %%
+# %%
+# todo: put this class in one file
+import datetime
 
+class liveMonitor():
+    def __init__(self, nMinutesCheckPeriod):
+        self.nMinutesCheckPeriod = nMinutesCheckPeriod
+        self.lastRunTime = []
+        
+    def minutes_to_next_check(self):
+        if self.lastRunTime == []:
+            return 0
+        
+        time2nextRun = self.lastRunTime + datetime.timedelta(minutes=self.nMinutesCheckPeriod) - datetime.datetime.now()
+        return time2nextRun.seconds /60
+    
+    def run(self):
+        print("run of parent class is doing nothing!")
+        self.lastRunTime = datetime.datetime.now()    
+    
+class computer_temperature_monitor(liveMonitor):
+    def run(self):
+        newTime     = datetime.datetime.now()
+        self.lastRunTime = newTime
+        # check
+        logMSG = ""
+        logMSG += "Computer temperature check ({0})\n".format(newTime)
+        data = read_hardware_monitor_status()
+        for sensor in data:
+            logMSG += "{}: {: <8} {: >15} = {: >5} C,  status: {}\n".format(sensor['dirName'], sensor['hwmonName'], sensor['sensorName'], sensor['temperature'] , sensor['status'])
+        logMSG += '\n\n'
+        return logMSG
 
 # %%
 # degreeC = u"\u2103"
-data = read_hardware_monitor_status()
+#data = read_hardware_monitor_status()
 
 # %% OLD 
 #thermalPath = "/sys/devices/virtual/thermal/"

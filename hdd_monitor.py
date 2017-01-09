@@ -21,15 +21,15 @@ class hddPartitionInfo():
         self.name = elements[5]
 # %%
 class liveMonitor():
-    def __init__(self, nMinutesPerCheck):
-        self.nMinutesPerCheck = nMinutesPerCheck
+    def __init__(self, nMinutesCheckPeriod):
+        self.nMinutesCheckPeriod = nMinutesCheckPeriod
         self.lastRunTime = []
         
     def minutes_to_next_check(self):
         if self.lastRunTime == []:
             return 0
         
-        time2nextRun = self.lastRunTime + datetime.timedelta(minutes=self.nMinutesPerCheck) - datetime.datetime.now()
+        time2nextRun = self.lastRunTime + datetime.timedelta(minutes=self.nMinutesCheckPeriod) - datetime.datetime.now()
         return time2nextRun.seconds /60
     
     def run(self):
@@ -38,11 +38,11 @@ class liveMonitor():
 
 
 class hddSpaceMonitor(liveMonitor):
-    def __init__(self, nMinutesPerCheck):
+    def __init__(self, nMinutesCheckPeriod):
         if sys.version_info[0] == 3:
-            super().__init__(nMinutesPerCheck)
+            super().__init__(nMinutesCheckPeriod)
         else:
-            liveMonitor.__init__(self,nMinutesPerCheck)
+            liveMonitor.__init__(self,nMinutesCheckPeriod)
         self.nDaysLeft = []
         
     def get_partition_infos(self):
@@ -59,14 +59,15 @@ class hddSpaceMonitor(liveMonitor):
         newTime     = datetime.datetime.now()
         
         # check
-        
-        print("HDD space check ({0})".format(newTime))
-        print("  {0: <20}: {1: >12}   {2: >12}    {3: >7}   {4}".format("Device", "Used", "Available", "Capacity", "Comment"))
+        logMSG = ""
+        newLine = '\n'
+        logMSG += "HDD space check ({0})".format(newTime)  + newLine
+        logMSG += "  {0: <20}: {1: >12}   {2: >12}    {3: >7}   {4}".format("Device", "Used", "Available", "Capacity", "Comment") + newLine
         nDaysLeft = []
         for iPart, part in enumerate(newPartInfo):
             if self.lastRunTime != []:
                 if part.name != self.lastPartInfo[iPart].name:
-                    print("error: order of partitions in df changed!")
+                    logMSG += "error: order of partitions in df changed!" + newLine
                     return -1
                 kilobytesPerDay = (part.used  -  self.lastPartInfo[iPart].used)/ ( float((newTime - self.lastRunTime).seconds) / 3600/24)
                 if kilobytesPerDay == 0:
@@ -82,27 +83,14 @@ class hddSpaceMonitor(liveMonitor):
             else:
                 estFullString = '(first run)'
                 
-            print("  {0: <20}: {1: >9.0f} MB / {2: >9.0f} MB    {3:3.2f} % \t {4}".format(part.name, part.used/1024, part.available/1024, part.used/ (part.used+part.available) *100, estFullString ))
+            logMSG += "  {0: <20}: {1: >9.0f} MB / {2: >9.0f} MB    {3:3.2f} % \t {4}".format(part.name, part.used/1024, part.available/1024, part.used/ (part.used+part.available) *100, estFullString ) + newLine
         self.nDaysLeft = nDaysLeft
-        print('\n')
+        logMSG += newLine+ newLine
         self.lastPartInfo = newPartInfo
         self.lastRunTime = newTime
+        logMSG += newLine
+        return logMSG
 
-# %%      
-import time 
-monitorList = []
 
-monitorList.append(hddSpaceMonitor(60.0))
-  
-while True:
-    
-    for mon in monitorList:
-        if mon.minutes_to_next_check() <= 0:
-            mon.run()
-            
-    timeForNextCheck = min([mon.minutes_to_next_check() for mon in monitorList])
-    print("waiting for {0:2.1f} min...".format(timeForNextCheck))
-    time.sleep(timeForNextCheck*60)
-        
 # %%        
 
