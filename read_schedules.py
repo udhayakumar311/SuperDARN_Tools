@@ -26,17 +26,18 @@ import urllib
 import urllib.request
 import datetime
 import matplotlib.pyplot as plt
+import numpy as np
 
 class structDummy:
     pass
 
-
+now = datetime.datetime.now()
 # %%
 
 
 
 def read_schedule(url_schedule, checkForGaps=True):
-    
+    errorMSG = ""
     schedule_txt = urllib.request.urlopen(url_schedule)
     parameterList = ['path', 'default', 'stationid', 'sitelib', 'channel', 'priority', 'duration']
     parameterDict = dict()
@@ -50,7 +51,8 @@ def read_schedule(url_schedule, checkForGaps=True):
             if parameter in parameterList:
                 parameterDict[parameter] = currLine[len(parameter)+1:]
             else:
-                raise ValueError("Paramater {} unkown in file  : {}".format(parameter,  url_schedule))
+                #raise ValueError("Paramater {} unkown in file  : {}".format(parameter,  url_schedule))
+                errorMSG += "Paramater {} unkown in file  : {}\n".format(parameter,  url_schedule)
 
             
     startTimeList = []
@@ -66,7 +68,7 @@ def read_schedule(url_schedule, checkForGaps=True):
         if line.split(" ")[0] in parameterList:
             parameterDict[line.split(" ")[0]] = line[len(line.split(" ")[0])+1:]
             if isMainFile:
-                print("Parameter {} in in the middle of the file! ({})".format(line.split(" ")[0], url_schedule))
+                errorMSG += "Parameter {} in in the middle of the file! ({})\n".format(line.split(" ")[0], url_schedule)
             continue
         try: 
            # startTimeList.append(datetime.datetime.strptime(line[:16], "%Y %m %d %H %M"))
@@ -80,7 +82,7 @@ def read_schedule(url_schedule, checkForGaps=True):
             priorityList.append(int(elements[6]))
             controlProgramList.append( " ".join(elements[7:]))
         except:
-            print("Error for parsing line:\n  {}  from file {}".format(line, url_schedule))
+            errorMSG += "Error for parsing line:\n  {}  from file {}\n".format(line, url_schedule)
             
     
     nEntries = len(controlProgramList)
@@ -90,14 +92,14 @@ def read_schedule(url_schedule, checkForGaps=True):
 
     if not 'channel' in parameterDict.keys():
         if isMainFile:
-            print('No channel defined in {}. '.format(url_schedule))
-            print("Assuming channel {} (from file name)!".format(url_schedule.split("/")[-1][4:5]))
+            errorMSG += 'No channel defined in {}. \n'.format(url_schedule)
+            errorMSG += "Assuming channel {} (from file name)!\n".format(url_schedule.split("/")[-1][4:5])
         parameterDict['channel'] = url_schedule.split("/")[-1][4:5]
             
     if not 'stationid' in parameterDict.keys():
         if isMainFile:
-            print('No stationid defined in {}. '.format(url_schedule))
-            print("Assuming channel {} (from file name)!".format(url_schedule.split("/")[-1][0:3]))
+            errorMSG += 'No stationid defined in {}. \n'.format(url_schedule)
+            errorMSG += "Assuming channel {} (from file name)!\n".format(url_schedule.split("/")[-1][0:3])
         parameterDict['stationid'] = url_schedule.split("/")[-1][0:3]
 
 
@@ -108,9 +110,9 @@ def read_schedule(url_schedule, checkForGaps=True):
             endTime = startTimeList[iEntry] + datetime.timedelta( minutes=durationList[iEntry])
             if not (endTime == startTimeList[iEntry+1]):
                 errorFound = True
-                print("Error in time schedule (duration or start time of next entry):")
-                print("  {} {} {} {}".format(startTimeList[iEntry],durationList[iEntry], priorityList[iEntry], controlProgramList[iEntry]))
-                print("  {} {} {} {}".format(startTimeList[iEntry+1],durationList[iEntry+1], priorityList[iEntry+1], controlProgramList[iEntry+1]))
+                errorMSG += "Error in time schedule (duration or start time of next entry):\n"
+                errorMSG += "  {} {} {} {}".format(startTimeList[iEntry],durationList[iEntry], priorityList[iEntry], controlProgramList[iEntry])
+                errorMSG += "  {} {} {} {}".format(startTimeList[iEntry+1],durationList[iEntry+1], priorityList[iEntry+1], controlProgramList[iEntry+1])
         
     # check for correct station name and channel number in command
     channelNo = ' abcd'.index(parameterDict['channel'])
@@ -118,18 +120,19 @@ def read_schedule(url_schedule, checkForGaps=True):
     for requiredString in requiredStringList:
         for iEntry in range(nEntries):
             if not requiredString in controlProgramList[iEntry]:
-                print("command does not include '{}' ".format(requiredString))
-                print("  {} {} {} {}".format(startTimeList[iEntry],durationList[iEntry], priorityList[iEntry], controlProgramList[iEntry]))
+                errorMSG += "command does not include '{}' :\n".format(requiredString)
+                errorMSG += "  {} {} {} {}".format(startTimeList[iEntry],durationList[iEntry], priorityList[iEntry], controlProgramList[iEntry])
                 errorFound = True
     
     
     if errorFound:
-        print("Error found in scheduling file {}\n\n".format(url_schedule))
+        print("Error found in scheduling file {}\n".format(url_schedule))
    # else:
    #     print("Looks good: {}".format(url_schedule))
         
     output = structDummy()
     output.url_schedule = url_schedule
+    output.isMainSchedule = isMainFile
     output.parameterDict = parameterDict
     output.startTimeList = startTimeList
     output.durationList = durationList
@@ -137,6 +140,7 @@ def read_schedule(url_schedule, checkForGaps=True):
     output.controlProgramList = controlProgramList
     output.nEntries = nEntries
     output.errorFound = errorFound
+    output.errorMSG = errorMSG
     return output
 #%
 
@@ -204,7 +208,210 @@ def read_swg_schedule(month, year):
     
     
 # %%
+def create_figure(scheduale_list, plotRange, labelSWGschedule = True):
+    fig = plt.figure(figsize=[16, 10])
+    ax = plt.subplot2grid((1,9), (0,0), colspan=8)
     
+    controlProgramColor = dict(normalscan="limegreen", normalsound="darkolivegreen", themisscan='royalblue', pcodescan_15km='purple',  codescan_15km="magenta", pcodescan='indigo' ,rbspscan='orange', iwd_normalscan='y',noopscan='lightgray', iwdscan='darkturquoise', interleavescan='springgreen', spaletascan='yellow')
+    
+    yLabelList = []
+    yTickList = []
+    iSchedule = 0
+    
+    now = datetime.datetime.utcnow()
+    xLimStart = now.date() + datetime.timedelta(days=plotRange[0])
+    xLimEnd = now.date() + datetime.timedelta(days=plotRange[1])
+    
+    for iRadar in range(len(schedule_list)):
+        if iRadar == 0 or schedule_file_list[iRadar][0].split("/")[-1][:1] != schedule_file_list[iRadar-1][0].split("/")[-1][:1]:
+            iSchedule += 1
+        else:
+            iSchedule += 0.3
+        for iSchedInRadar, currSchedule in enumerate(schedule_list[iRadar]):
+            iSchedule += 0.8
+            yLabelList.append(schedule_file_list[iRadar][iSchedInRadar].split("/")[-1][:-4])
+            yTickList.append(iSchedule)
+            for iEntry in range(len(currSchedule.durationList)):
+                #if currSchedule.startTimeList[iEntry] > now + datetime.timedelta(days=plotRange[1]) or (currSchedule.startTimeList[iEntry] + datetime.timedelta( minutes=currSchedule.durationList[iEntry])) < now + datetime.timedelta(days=plotRange[0]):
+                #    continue
+                currProgram = currSchedule.controlProgramList[iEntry].split(" ")[0]
+                if currProgram in controlProgramColor:
+                    plotColor = controlProgramColor[currProgram]
+                else:
+                    print("no color for " + currProgram)
+                    plotColor = 'gray'
+                startPoint = currSchedule.startTimeList[iEntry]
+                duration = currSchedule.durationList[iEntry]/60/24
+                ax.barh(iSchedule,  duration, left=startPoint, align='center', color=plotColor, alpha=0.75)
+                textPosition = startPoint+datetime.timedelta(minutes=currSchedule.durationList[iEntry]/2)
+    #            if textPosition.date() < xLimEnd and textPosition.date() > xLimStart: # if in xLim range
+                if now > startPoint and now < (startPoint + datetime.timedelta(minutes=currSchedule.durationList[iEntry])):  # if is current program
+                    ax.text(textPosition, iSchedule, currProgram , rotation=0, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
+                
+            # plt.gcf().autofmt_xdate()
+    
+    
+    # plot SWG schedule
+    
+    swg_schedule_color = dict(Common="IndianRed", Special="LightSalmon", Discretionary="DarkRed")
+    iSchedule += 2
+    for iEntry in range(len(swg_schedule.phaseNameList)):
+        startPoint = swg_schedule.startTimeList[iEntry]
+        duration = swg_schedule.durationInDays[iEntry].total_seconds()/3600/24
+        ax.barh(iSchedule,  duration, left=startPoint, align='center', height=1.6, color=swg_schedule_color[swg_schedule.phaseNameList[iEntry].split(' ')[0]
+    ])
+        textPosition = startPoint+swg_schedule.durationInDays[iEntry]/2
+        if textPosition.date() < xLimEnd and textPosition.date() > xLimStart and labelSWGschedule: # if in xLim range
+            printText = swg_schedule.phaseNameList[iEntry]
+            if "(see Note" in printText: # remove note
+                printText = printText[:printText.index("(see Note")-1]
+            ax.text(textPosition, iSchedule, printText , rotation=45, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
+    
+    
+    if swg_plotNextMonth:
+        for iEntry in range(len(swg_schedule_nextMonth.phaseNameList)):
+            startPoint = swg_schedule_nextMonth.startTimeList[iEntry]
+            duration = swg_schedule_nextMonth.durationInDays[iEntry].total_seconds()/3600/24
+            ax.barh(iSchedule,  duration, left=startPoint, align='center', height=1.6, color=swg_schedule_color[swg_schedule_nextMonth.phaseNameList[iEntry].split(' ')[0]
+        ])
+            textPosition = startPoint+swg_schedule_nextMonth.durationInDays[iEntry]/2
+            if textPosition.date() < xLimEnd and textPosition.date() > xLimStart and labelSWGschedule: # if in xLim range
+                printText = swg_schedule_nextMonth.phaseNameList[iEntry]
+                if "(see Note" in printText: # remove note
+                    printText = printText[:printText.index("(see Note")-1]
+                ax.text(textPosition, iSchedule, printText , rotation=45, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
+      
+    yTickList.append(iSchedule)
+    yLabelList.append("SWG schedule")
+                
+    # plot line for now
+    plt.plot([now, now], ax.get_ylim(), color='red', linewidth=3)
+    
+    # format plot
+    ax.set_xlim(xLimStart, xLimEnd)
+    ax.xaxis.set_major_formatter( FuncFormatter(dateFormatter) ) 
+    ax.grid(True)
+    plt.xticks(rotation=0)
+    ax.set_yticks(yTickList)
+    ax.set_yticklabels(yLabelList)
+    ax.set_xlabel("time")
+    
+    
+    nowUTC   =  datetime.datetime.utcnow()
+    nowLocal =  datetime.datetime.now()
+    plt.title("Current now: {} (UTC)  || {}  (local)".format(nowUTC.strftime("%Y-%m-%d %H:%M"), nowLocal.strftime("%Y-%m-%d %H:%M")))
+    
+    #make legends
+    import matplotlib.patches as mpatches
+    allPrograms = controlProgramColor.keys()
+    legendPatches = []
+    for program in allPrograms:
+        legendPatches.append(mpatches.Patch(color=controlProgramColor[program], label=program))
+    
+    legend_handle = plt.legend(handles=legendPatches, bbox_to_anchor=(1.025, 0.5), loc=2, borderaxespad=0.)
+    
+    ax.add_artist(legend_handle)
+    
+    allPrograms = swg_schedule_color.keys()
+    legendPatches = []
+    for program in allPrograms:
+        legendPatches.append(mpatches.Patch(color=swg_schedule_color[program], label=program))
+    legend_handle = plt.legend(handles=legendPatches, bbox_to_anchor=(1.025, 1), loc=2, borderaxespad=0.)
+    
+    return fig
+# %% 
+# check status and create html text file
+def write_status_html_text(fileName,schedule_list):
+    
+    nMonth2show = 3
+    now = datetime.datetime.now()
+    dateList = []
+    monthNameList = []
+    SWG_schedule_available = []
+    for iMonth in range(nMonth2show+1):
+        dateList.append(datetime.datetime(now.year+int(np.floor((now.month-1+iMonth)/12)), int(np.mod(now.month-1+iMonth,12)+1), 1))
+        url = "http://sdnet.thayer.dartmouth.edu/web_data/schedules/swg/{}{:>02d}.swg".format(dateList[-1].year, dateList[-1].month)
+        
+        try:
+            schedule_txt = urllib.request.urlopen(url)
+            SWG_schedule_available.append(True)
+        except:
+            SWG_schedule_available.append(False)
+    
+    githubSchedAvaiable = []
+    
+    for iMonth in range(nMonth2show):
+        monthNameList.append(dateList[iMonth].strftime("%B"))
+        githubSchedAvaiable.append( [])
+        for iSchedule in range(len(schedule_list)):
+            scheule_end = schedule_list[iSchedule][0].startTimeList[-1] + datetime.timedelta(minutes=schedule_list[iSchedule][0].durationList[-1])
+            githubSchedAvaiable[iMonth].append(scheule_end >= dateList[iMonth+1])
+    
+    githubSchedErrors = []
+    allErrorMSGs = ""
+    for iSchedule in range(len(schedule_list)):
+        githubSchedErrors.append(schedule_list[iSchedule][0].errorFound)
+        allErrorMSGs += schedule_list[iSchedule][0].errorMSG
+        
+    # construt html code
+    htmlTable = '<table>\n'
+    htmlTable += "<tr> <th> Schedule </th> <th> " + " </th> <th> ".join(monthNameList) + "</th> </tr> \n"
+    
+    htmlTable +=  '<tr> <td>Software Working Group</td> '
+    for iMonth in range(nMonth2show):
+        if SWG_schedule_available[iMonth]:
+             htmlTable +=  " <td id=green>Avaiable</td> "
+        else:
+             htmlTable +=  " <td id=nothing>Not Avaiable</td> "
+    htmlTable += "</tr> \n"
+    
+    htmlTable +=  '<tr> <td>Git Schedule </td> '
+    for iMonth in range(nMonth2show):
+        if all(githubSchedAvaiable[iMonth]):
+             htmlTable +=  " <td id=green>Avaiable</td> "
+        else:
+             if SWG_schedule_available[iMonth]:
+                 
+                 daysLeft = (dateList[iMonth] - datetime.datetime.now() ).days
+                 if  daysLeft < 10:
+                     htmlTable +=  " <td id=red>Not Avaiable (" + str(int(daysLeft)) + " days left)</td> "
+                 else:
+                     htmlTable +=  " <td id=orange>Not Avaiable (" + str(int(daysLeft)) + " days left)</td> "
+             else:
+                 htmlTable +=  " <td id=green>Not Avaiable</td> "
+    htmlTable += "</tr> \n"
+    
+    
+    htmlTable +=  '<tr> <td>Git Errors </td> '
+    for iMonth in range(nMonth2show):
+        if any(githubSchedErrors):
+             htmlTable +=  " <td id=orange>Found</td> "
+        else:
+             htmlTable +=  " <td id=green>Ok</td> "
+    htmlTable += "</tr> \n"
+    
+    htmlTable += "</table>\n"
+    
+    htmlTable += '\n\n<h3> Error messages: </h3>\n<Pre>\n<p style="margin-left:30px;">\n'
+    htmlTable += allErrorMSGs #.replace('\n', '<br>\n')
+    htmlTable += '\n</p></Pre>\n'
+    
+    # write
+    
+    with open(fileName, "w") as f:
+        f.write(htmlTable)
+
+
+# %%
+
+def save_figure(fileName, schedule_list):
+    plotRange = [-1, 3] # in days from today
+    fig = create_figure(schedule_list, plotRange)
+    fig.savefig(fileName)
+    plt.close(fig)
+
+
+# %%    
     
 
 root_schedule_url = 'https://raw.githubusercontent.com/UAF-SuperDARN-OPS/schedule_files/'
@@ -220,8 +427,6 @@ for radar_file_list in schedule_file_list:
     for url_schedule in radar_file_list:
         schedule_list[-1].append(read_schedule(root_schedule_url + url_schedule))
 
-
-
 now = datetime.datetime.now()
 swg_schedule = read_swg_schedule(now.month, now.year)
 
@@ -229,122 +434,22 @@ swg_plotNextMonth = now.day > 15
 if swg_plotNextMonth:
     nextMonth = now + datetime.timedelta(days=30)
     swg_schedule_nextMonth = read_swg_schedule(nextMonth.month, nextMonth.year)
+
+# %% write data for website
+fileName_txt = 'status_website/schedule_status_text'
+fileName_png = "status_website/schedule_plot.png"
+
+save_figure(fileName_png, schedule_list)
+write_status_html_text(fileName_txt,schedule_list)
+
 # %%
 
+# %%
 plotRange = [-1, 3] # in days from today
-labelSWGschedule = True
+##fig = create_figure(schedule_list, plotRange)
 
 #plotRange = [-25, 35] # in days from today
 #labelSWGschedule = False
 
-fig = plt.figure(figsize=[16, 10])
-ax = plt.subplot2grid((1,9), (0,0), colspan=8)
-
-controlProgramColor = dict(normalscan="limegreen", normalsound="darkolivegreen", themisscan='royalblue', pcodescan_15km='purple',  codescan_15km="magenta", pcodescan='indigo' ,rbspscan='orange', iwd_normalscan='y',noopscan='lightgray', iwdscan='darkturquoise', interleavescan='springgreen', spaletascan='yellow')
-
-yLabelList = []
-yTickList = []
-iSchedule = 0
-
-now = datetime.datetime.utcnow()
-xLimStart = now.date() + datetime.timedelta(days=plotRange[0])
-xLimEnd = now.date() + datetime.timedelta(days=plotRange[1])
-
-for iRadar in range(len(schedule_list)):
-    if iRadar == 0 or schedule_file_list[iRadar][0].split("/")[-1][:1] != schedule_file_list[iRadar-1][0].split("/")[-1][:1]:
-        iSchedule += 1
-    else:
-        iSchedule += 0.3
-    for iSchedInRadar, currSchedule in enumerate(schedule_list[iRadar]):
-        iSchedule += 0.8
-        yLabelList.append(schedule_file_list[iRadar][iSchedInRadar].split("/")[-1][:-4])
-        yTickList.append(iSchedule)
-        for iEntry in range(len(currSchedule.durationList)):
-            #if currSchedule.startTimeList[iEntry] > now + datetime.timedelta(days=plotRange[1]) or (currSchedule.startTimeList[iEntry] + datetime.timedelta( minutes=currSchedule.durationList[iEntry])) < now + datetime.timedelta(days=plotRange[0]):
-            #    continue
-            currProgram = currSchedule.controlProgramList[iEntry].split(" ")[0]
-            if currProgram in controlProgramColor:
-                plotColor = controlProgramColor[currProgram]
-            else:
-                print("no color for " + currProgram)
-                plotColor = 'gray'
-            startPoint = currSchedule.startTimeList[iEntry]
-            duration = currSchedule.durationList[iEntry]/60/24
-            ax.barh(iSchedule,  duration, left=startPoint, align='center', color=plotColor, alpha=0.75)
-            textPosition = startPoint+datetime.timedelta(minutes=currSchedule.durationList[iEntry]/2)
-#            if textPosition.date() < xLimEnd and textPosition.date() > xLimStart: # if in xLim range
-            if now > startPoint and now < (startPoint + datetime.timedelta(minutes=currSchedule.durationList[iEntry])
-):  # if is current program
-                ax.text(textPosition, iSchedule, currProgram , rotation=0, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
-            
-        # plt.gcf().autofmt_xdate()
-
-
-# plot SWG schedule
-
-swg_schedule_color = dict(Common="IndianRed", Special="LightSalmon", Discretionary="DarkRed")
-iSchedule += 2
-for iEntry in range(len(swg_schedule.phaseNameList)):
-    startPoint = swg_schedule.startTimeList[iEntry]
-    duration = swg_schedule.durationInDays[iEntry].total_seconds()/3600/24
-    ax.barh(iSchedule,  duration, left=startPoint, align='center', height=1.6, color=swg_schedule_color[swg_schedule.phaseNameList[iEntry].split(' ')[0]
-])
-    textPosition = startPoint+swg_schedule.durationInDays[iEntry]/2
-    if textPosition.date() < xLimEnd and textPosition.date() > xLimStart and labelSWGschedule: # if in xLim range
-        printText = swg_schedule.phaseNameList[iEntry]
-        if "(see Note" in printText: # remove note
-            printText = printText[:printText.index("(see Note")-1]
-        ax.text(textPosition, iSchedule, printText , rotation=45, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
-
-
-if swg_plotNextMonth:
-    for iEntry in range(len(swg_schedule_nextMonth.phaseNameList)):
-        startPoint = swg_schedule_nextMonth.startTimeList[iEntry]
-        duration = swg_schedule_nextMonth.durationInDays[iEntry].total_seconds()/3600/24
-        ax.barh(iSchedule,  duration, left=startPoint, align='center', height=1.6, color=swg_schedule_color[swg_schedule_nextMonth.phaseNameList[iEntry].split(' ')[0]
-    ])
-        textPosition = startPoint+swg_schedule_nextMonth.durationInDays[iEntry]/2
-        if textPosition.date() < xLimEnd and textPosition.date() > xLimStart and labelSWGschedule: # if in xLim range
-            printText = swg_schedule_nextMonth.phaseNameList[iEntry]
-            if "(see Note" in printText: # remove note
-                printText = printText[:printText.index("(see Note")-1]
-            ax.text(textPosition, iSchedule, printText , rotation=45, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
-  
-yTickList.append(iSchedule)
-yLabelList.append("SWG schedule")
-            
-# plot line for now
-plt.plot([now, now], ax.get_ylim(), color='red', linewidth=3)
-
-# format plot
-ax.set_xlim(xLimStart, xLimEnd)
-ax.xaxis.set_major_formatter( FuncFormatter(dateFormatter) ) 
-ax.grid(True)
-plt.xticks(rotation=0)
-ax.set_yticks(yTickList)
-ax.set_yticklabels(yLabelList)
-ax.set_xlabel("time")
-
-
-nowUTC   =  datetime.datetime.utcnow()
-nowLocal =  datetime.datetime.now()
-plt.title("Current now: {} (UTC)  || {}  (local)".format(nowUTC.strftime("%Y-%m-%d %H:%M"), nowLocal.strftime("%Y-%m-%d %H:%M")))
-
-#make legends
-import matplotlib.patches as mpatches
-allPrograms = controlProgramColor.keys()
-legendPatches = []
-for program in allPrograms:
-    legendPatches.append(mpatches.Patch(color=controlProgramColor[program], label=program))
-
-legend_handle = plt.legend(handles=legendPatches, bbox_to_anchor=(1.025, 0.5), loc=2, borderaxespad=0.)
-
-ax.add_artist(legend_handle)
-
-allPrograms = swg_schedule_color.keys()
-legendPatches = []
-for program in allPrograms:
-    legendPatches.append(mpatches.Patch(color=swg_schedule_color[program], label=program))
-legend_handle = plt.legend(handles=legendPatches, bbox_to_anchor=(1.025, 1), loc=2, borderaxespad=0.)
-
-plt.show()
+##plt.show()
+#savefig('foo.png')

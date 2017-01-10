@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+   <title>AJAX Example</title>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <script type="text/javascript" src="reloader.js"></script>
+
+	<style>
+
+	  table, th, td  {border: 1px solid black; border-spacing: 5px;}
+	  th, td         {padding: 5px;}
+	  #tabelle       {background-color: #8a9da8;}
+	  #spaltengruppe {background-color: #df6c20;}
+	  #spalte        {background-color: #5c82d9;}
+	  #red  	 {background-color: #FF0000;}
+          #nothing  	 {background-color: #FFFFFF;}
+	  #green         {background-color: #228B22;}
+	  #orange        {background-color: #ff8529;}
+
+	</style>
+
+
+</head>
+
+<body onload="reloadData()">
+
+<h2>UAF Schedule</h2>
+
+<img id="schedule_plot" src="schedule_plot.png" alt="Overview plot not available..." style="width:90%;">
+
+<h3>Schedule Status:</h3>
+   <div id="schedule_status_text">
+      <p>Loading Data...</p>
+   </div>
+
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,28 @@
+<table>
+<tr> <th> Schedule </th> <th> January </th> <th> February </th> <th> March</th> </tr> 
+<tr> <td>Software Working Group</td>  <td id=green>Avaiable</td>  <td id=green>Avaiable</td>  <td id=nothing>Not Avaiable</td> </tr> 
+<tr> <td>Git Schedule </td>  <td id=green>Avaiable</td>  <td id=orange>Not Avaiable (22 days left)</td>  <td id=green>Not Avaiable</td> </tr> 
+<tr> <td>Git Errors </td>  <td id=orange>Found</td>  <td id=orange>Found</td>  <td id=orange>Found</td> </tr> 
+</table>
+
+
+<h3> Error messages: </h3>
+<Pre>
+<p style="margin-left:30px;">
+No channel defined in https://raw.githubusercontent.com/UAF-SuperDARN-OPS/schedule_files/southpole/sps/sps.a.scd. 
+Assuming channel a (from file name)!
+No stationid defined in https://raw.githubusercontent.com/UAF-SuperDARN-OPS/schedule_files/southpole/sps/sps.a.scd. 
+Assuming channel sps (from file name)!
+command does not include '-stid kod' :
+  2016-11-21 10:00:00 4320 5 pcodescan_15km stid kod -xcf 1 -di -fast -df 10400 -nf 10400 -c 4
+Error in time schedule (duration or start time of next entry):
+  2016-06-30 12:00:00 720 5 normalscan -stid kod -xcf 1 -sb 3 -eb 3 -fast -df 10400 -nf 10400 -c 3
+  2016-08-01 00:00:00 720 15 themisscan -stid kod -xcf 1 -df 10400 -nf 10400 -c 3
+Error in time schedule (duration or start time of next entry):
+  2016-11-28 00:00:00 4320 0 iwdscan -stid kod -xcf 1 -sb 3 -eb 3 -fast -df 10400 -nf 10400 -c 3
+  2016-11-01 00:00:00 360 5 normalscan -stid kod -xcf 1 -sb 3 -eb 3 -fast -df 10400 -nf 10400 -c 3
+Error in time schedule (duration or start time of next entry):
+  2016-11-28 00:00:00 4320 0 iwdscan -stid kod -xcf 1 -sb 3 -eb 3 -fast -df 10400 -nf 10400 -c 3
+  2016-11-01 00:00:00 360 5 normalscan -stid kod -xcf 1 -sb 3 -eb 3 -fast -df 10400 -nf 10400 -c 3
+
+</p></Pre>
