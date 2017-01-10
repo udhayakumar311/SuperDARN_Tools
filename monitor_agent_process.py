@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
 Created on Mon Jan  9 11:32:45 2017
@@ -12,7 +13,7 @@ import hdd_monitor
 import hwmonitor_read_thermal
 
 # %% read config file
-fileName = '/home/mguski/repos/SuperDARN_Tools/monitor.cfg'
+fileName = 'monitor.cfg'
 
 f = open(fileName, 'r')
 
@@ -40,7 +41,7 @@ for line in f:
 
 startTime = datetime.datetime.now()
 logFile = configDict["general"]['logFile']
-logFile = logFile[:-4] +  startTime.strftime("__%Y-%M-%d") + logFile[-4:]
+logFile = logFile[:-4] +  startTime.strftime("__%Y-%m-%d") + logFile[-4:]
 with open(logFile, 'w+') as f:
     f.write("Starting monitor agent on " + configDict["general"]['name'] + " (" + str(startTime) + ")\n\n")
     
