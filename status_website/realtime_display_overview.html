@@ -1,33 +1,68 @@
-<html lang="en-US"><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8"><link rel="shortcut icon" href="http://superdarn.gi.alaska.edu/favicon.ico" type="image/icon">
-<link rel="icon" href="http://superdarn.gi.alaska.edu/favicon.ico" type="image/icon">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
-<title>
-RTJD - Overview time
-</title>
+<head>
+   <title>AJAX Example</title>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <script type="text/javascript" src="reloader.js"></script>
 
-<style>
-h1 {text-align:center; font:24px arial,sansserif; color:FFFFCC;}
-h0 {text-align:left; font:16px arial,sansserif; color:FFFFCC;}
-h2 {text-align:left; font:14px arial,sansserif; color:FFFFCC;}
-p {text-align:left; font:12px arial,sansserif; color:FFFFCC;}
-span { font:14px arial,sansserif;color:FFFFCC;};
-timePlot {width:300px; height:225px;text-align:center; vertical-align:middle;}
-</style>
+	<style>
+
+	  #tabelle       {background-color: #8a9da8;}
+	  #spaltengruppe {background-color: #df6c20;}
+	  #spalte        {background-color: #5c82d9;}
+	  #red  	 {background-color: #FF0000;}
+          #nothing  	 {background-color: #FFFFFF;}
+	  #green         {background-color: #228B22;}
+	  #orange        {background-color: #ff8529;}
+
+	ul {
+	    list-style-type: none;
+	    margin: 0;
+	    padding: 0;
+	    width: 15%;
+	    background-color: #f1f1f1;
+	    position: fixed;
+	    height: 100%;
+	    overflow: auto;
+	}
+
+	li a {
+	    display: block;
+	    color: #000;
+	    padding: 8px 16px;
+	    text-decoration: none;
+	}
+
+	li a.active {
+	    background-color: #4CAF50;
+	    color: white;
+	}
+
+	li a:hover:not(.active) {
+	    background-color: #555;
+	    color: white;
+	}
+
+	</style>
+
 
 </head>
 
-<body bgcolor="#00336">
-<table width="600" columns="2" cellspacing="00" cellpadding="0">
-	<tbody><tr>
-		<td   width="239" height="85"><a href="http://www.gi.alaska.edu/"><img src="Real%20Time%20Java%20Display_files/Geophysical-Institute.gif"><img src="Real%20Time%20Java%20Display_files/Geophysical_Address.gif">
-		</td>
+<body onload="reloadData()">
 
-        <td> <a href="http://superdarn.gi.alaska.edu/"><img src="Real%20Time%20Java%20Display_files/SuperDARN.gif"></a> </td>
-	</tr>
-</tbody></table>
+ <ul>
+  <li><a href="default.asp">Home</a></li>
+  <li><a href="news.asp">News</a></li>
+  <li><a class="active" href="realtime_display_overview.html">RTD Overview</a></li>
+  <li><a href="realtime_display_overview_beamVSpower.html">RTD Beam vs Power</a></li>
+  <li><a href="scheduler_status.html">Schedule</a></li>
+</ul> 
 
+<div style="margin-left:15%;padding:1px 16px;height:1000px;">
 <center>
 <h1> Real-Time RADAR Display - Overview</h1>
 </center>
@@ -106,5 +141,8 @@ timePlot {width:300px; height:225px;text-align:center; vertical-align:middle;}
 	</tr>
 </tbody></table>
 
+</div>
 
-</body></html>
+</body>
+
+</html>
