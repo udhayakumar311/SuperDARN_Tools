@@ -11,6 +11,43 @@ function reloadData()
 
 }
 
+function update_RT_geo_power()
+{
+   var plotName = "geo_power"
+   var now = new Date();
+   var baseURL = 'http://superdarn.gi.alaska.edu/java/images/gui/'
+   var siteArray = ["ade", "kodc", "mcma", "ksr", "adw", "kodd", "mcmb", "sps"];
+
+   for (let site of siteArray) {
+   	document.images[site].src = baseURL + site + '/' + plotName + '.png?' + now.getTime();
+   	document.getElementById(site + "_href").href = baseURL + site + '/' + plotName + '.png' ;
+}
+
+
+   // Start new timer (in ms)
+  timeoutID = setTimeout('update_RT_geo_power()', 5000);
+
+}
+
+function update_RT_fan_power()
+{
+   var plotName = "fan_power"
+   var now = new Date();
+   var baseURL = 'http://superdarn.gi.alaska.edu/java/images/gui/'
+   var siteArray = ["ade", "kodc", "mcma", "ksr", "adw", "kodd", "mcmb", "sps"];
+
+   for (let site of siteArray) {
+   	document.images[site].src = baseURL + site + '/' + plotName + '.png?' + now.getTime();
+   	document.getElementById(site + "_href").href = baseURL + site + '/' + plotName + '.png' ;
+}
+
+
+   // Start new timer (in ms)
+  timeoutID = setTimeout('update_RT_fan_power()', 5000);
+
+}
+
+
 function reloadData_schedule_text()
 {
    var now = new Date();

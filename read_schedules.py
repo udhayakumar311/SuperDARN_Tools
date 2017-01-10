@@ -396,6 +396,8 @@ def write_status_html_text(fileName,schedule_list):
     htmlTable += allErrorMSGs #.replace('\n', '<br>\n')
     htmlTable += '\n</p></Pre>\n'
     
+    htmlTable += '\n[ last update ' + now.strftime("%Y/%m/%d %H:%M %Z") + '] \n'
+    
     # write
     
     with open(fileName, "w") as f:

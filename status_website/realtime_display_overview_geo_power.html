@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+   <title>Real Time Data Overview</title>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <script type="text/javascript" src="reloader.js"></script>
+
+	<style>
+
+	  #tabelle       {background-color: #8a9da8;}
+	  #spaltengruppe {background-color: #df6c20;}
+	  #spalte        {background-color: #5c82d9;}
+	  #red  	 {background-color: #FF0000;}
+          #nothing  	 {background-color: #FFFFFF;}
+	  #green         {background-color: #228B22;}
+	  #orange        {background-color: #ff8529;}
+	  #headline2     {background-color: #333; color:white; text-align:center}
+	  #headline      { text-align:center}
+	ul {
+	    list-style-type: none;
+	    margin: 0;
+	    padding: 0;
+	    background-color: #333;
+	    position: fixed;
+	    top: 0;
+	    width: 100%;
+	    overflow: auto;
+	    height: 41px;
+	
+	}
+
+	li {
+	    float: left;
+	}
+	li a {
+	    display: block;
+	    color: #fff;
+	    padding: 11px ;
+	    text-decoration: none;
+	}
+
+	li a.active {
+	    background-color: #4CAF50;
+	    color: white;
+	}
+
+	li a:hover:not(.active) {
+	    background-color: #555;
+	    color: white;
+	}
+
+
+	</style>
+
+
+</head>
+
+<body onload="update_RT_geo_power()">
+
+<ul>
+  <li><a href="home.html">Home</a></li>
+  <li><a class="active" href="realtime_display_overview.html">RTD Overview</a></li>
+  <li><a href="scheduler_status.html">Schedule</a></li>
+  <li><a href="links.html"> Links</a></li>
+</ul> 
+<p></p>
+<ul style=top:41px;>
+  <li><a> </a></li>
+  <li><a href="realtime_display_overview.html">Time Plot</a></li>
+  <li><a class="active" href="realtime_display_overview_geo_power.html">Geographic Plot</a></li>
+  <li><a href="realtime_display_overview_fan_power.html">Beam vs. Gate Plot</a></li>
+</ul> 
+
+
+<div style="margin-top:7%;padding:11px 16px;height:1000px;">
+<h2 id=headline>Real-Time RADAR Display - Geographic</h2> 
+
+<table width="2000">
+</table>
+
+<table columns="4" hspace="10"">
+	<colgroup>
+	<col width="500">
+	<col width="500">
+	<col width="500">
+	<col width="500">
+	</colgroup>
+
+<tbody >
+	<tr>
+		<th><h3>Adak</h3></th>
+		<th><h3>Kodiak</h3></th>
+		<th><h3>McMurdo</h3></th>
+		<th><h3>King Salmon / SPS</h3></th>
+	</tr>
+	<tr bgcolor="#FFFFFF" >
+<td>
+		    <a id="ade_href">
+		    <img id="ade" style="max-height:100%; max-width:100%" alt="Error while updating graph" />  
+		 </td> 
+		<td>
+		    <a id="kodc_href">
+		    <img id="kodc" style="max-height:100%; max-width:100%" alt="Error while updating graph" />  
+		 </td>  
+
+		<td>
+		    <a id="mcma_href">
+		    <img id="mcma" style="max-height:100%; max-width:100%" alt="Error while updating graph" />  
+		 </td>  
+		<td>
+		    <a id="ksr_href">
+		    <img id="ksr" style="max-height:100%; max-width:100%" alt="Error while updating graph" />  
+		 </td>   
+
+
+	</tr>
+	<tr bgcolor="#FFFFFF">
+
+
+		<td>
+		    <a id="adw_href">
+		    <img id="adw" style="max-height:100%; max-width:100%" alt="Error while updating graph" />  
+		 </td>  
+
+
+		<td>
+		    <a id="kodd_href">
+		    <img id="kodd" style="max-height:100%; max-width:100%" alt="Error while updating graph" />  </td>  
+
+		<td>
+		    <a id="mcmb_href">
+		    <img id="mcmb" style="max-height:100%; max-width:100%" alt="Error while updating graph" />  
+		 </td>  
+
+
+		<td>
+		    <a id="sps_href">
+		    <img id="sps" style="max-height:100%; max-width:100%" alt="Error while updating graph" />  
+		 </td>  
+		<td>
+
+
+	</tr>
+
+	<tr>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th><br></th>
+	</tr>
+</tbody></table>
+
+<p>Plots are updating every 5 seconds.</p>
+
+</div>
+
+</body>
+
+</html>
