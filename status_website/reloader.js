@@ -7,7 +7,7 @@ function reloadData()
    reloadData_schedule_text();
 
 //    reloadData_example();
-   timeoutID = setTimeout('reloadData()', 2000);
+   timeoutID = setTimeout('reloadData()', 10000);
 
 }
 

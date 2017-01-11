@@ -1,7 +1,7 @@
 <table>
 <tr> <th> Schedule </th> <th> January </th> <th> February </th> <th> March</th> </tr> 
 <tr> <td>Software Working Group</td>  <td id=green>Avaiable</td>  <td id=green>Avaiable</td>  <td id=nothing>Not Avaiable</td> </tr> 
-<tr> <td>Git Schedule </td>  <td id=green>Avaiable</td>  <td id=orange>Not Avaiable (22 days left)</td>  <td id=green>Not Avaiable</td> </tr> 
+<tr> <td>Git Schedule </td>  <td id=green>Avaiable</td>  <td id=orange>Not Avaiable (21 days left)</td>  <td id=green>Not Avaiable</td> </tr> 
 <tr> <td>Git Errors </td>  <td id=orange>Found</td>  <td id=orange>Found</td>  <td id=orange>Found</td> </tr> 
 </table>
 
@@ -26,3 +26,5 @@ Error in time schedule (duration or start time of next entry):
   2016-11-01 00:00:00 360 5 normalscan -stid kod -xcf 1 -sb 3 -eb 3 -fast -df 10400 -nf 10400 -c 3
 
 </p></Pre>
+
+[ last update 2017/01/10 11:19 ] 
