@@ -13,7 +13,6 @@ Created on Fri Dec 30 12:57:31 2016
 
 # %%
 
-
 import re
 import datetime
 import matplotlib.pyplot as plt

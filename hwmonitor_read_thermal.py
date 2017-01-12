@@ -5,7 +5,7 @@ import glob
 
 
 # %%
-def read_hardware_monitor_status(hwmonPath = "/sys/class/hwmon/"):
+def read_hardware_monitor_status(hwmonPath = "/sys/class/hwmon/", verbose=False):
     allDirs = os.listdir(hwmonPath)
     output = []
     for currDir in allDirs: 
@@ -42,8 +42,8 @@ def read_hardware_monitor_status(hwmonPath = "/sys/class/hwmon/"):
                     sensorName = f.read()[:-1]
             else:
                 sensorName = "sensor " + str(iTemp+1)      
-                
-            print("{}: {: <8} {: >15} = {: >5} C,  status: {}".format(currDir,hwmonName, sensorName, temp , status))
+            if verbose:    
+                print("{}: {: <8} {: >15} = {: >5} C,  status: {}".format(currDir,hwmonName, sensorName, temp , status))
             output.append(dict(dirName=currDir,hwmonName=hwmonName, sensorName=sensorName, temperature=temp, status=status ))
             
     return output
@@ -56,6 +56,7 @@ class liveMonitor():
     def __init__(self, nMinutesCheckPeriod):
         self.nMinutesCheckPeriod = nMinutesCheckPeriod
         self.lastRunTime = []
+        self.isInitialCheck = True
         
     def minutes_to_next_check(self):
         if self.lastRunTime == []:
@@ -73,12 +74,19 @@ class computer_temperature_monitor(liveMonitor):
         newTime     = datetime.datetime.now()
         self.lastRunTime = newTime
         # check
-        logMSG = ""
-        logMSG += "Computer temperature check ({0})\n".format(newTime)
         data = read_hardware_monitor_status()
-        for sensor in data:
-            logMSG += "{}: {: <8} {: >15} = {: >5} C,  status: {}\n".format(sensor['dirName'], sensor['hwmonName'], sensor['sensorName'], sensor['temperature'] , sensor['status'])
-        logMSG += '\n\n'
+        
+        logMSG = ""
+        logMSG += "Computer temperature check ({0})\n".format(newTime.strftime("%Y-%m-%d %H:%M"))
+        if self.isInitialCheck:
+            for sensor in data:
+                logMSG += "{}: {: <8} {: >15} = {: >5} C,  status: {}\n".format(sensor['dirName'], sensor['hwmonName'], sensor['sensorName'], sensor['temperature'] , sensor['status'])
+            logMSG += '\n'
+            self.isInitialCheck = False
+        else:
+            logMSG += "Temperatures: "
+            logMSG += "|".join([str(sensor['temperature']) for sensor in data])
+            logMSG += '\n\n'            
         return logMSG
 
 # %%

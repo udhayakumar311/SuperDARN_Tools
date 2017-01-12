@@ -24,6 +24,7 @@ class liveMonitor():
     def __init__(self, nMinutesCheckPeriod):
         self.nMinutesCheckPeriod = nMinutesCheckPeriod
         self.lastRunTime = []
+        self.isInitialCheck = True
         
     def minutes_to_next_check(self):
         if self.lastRunTime == []:
@@ -45,6 +46,7 @@ class hddSpaceMonitor(liveMonitor):
             liveMonitor.__init__(self,nMinutesCheckPeriod)
         self.nDaysLeft = []
         
+        
     def get_partition_infos(self):
         command = "df -P"
         return_code = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE).stdout.readlines()
@@ -61,8 +63,6 @@ class hddSpaceMonitor(liveMonitor):
         # check
         logMSG = ""
         newLine = '\n'
-        logMSG += "HDD space check ({0})".format(newTime)  + newLine
-        logMSG += "  {0: <20}: {1: >12}   {2: >12}    {3: >7}   {4}".format("Device", "Used", "Available", "Capacity", "Comment") + newLine
         nDaysLeft = []
         for iPart, part in enumerate(newPartInfo):
             if self.lastRunTime != []:
@@ -72,23 +72,36 @@ class hddSpaceMonitor(liveMonitor):
                 kilobytesPerDay = (part.used  -  self.lastPartInfo[iPart].used)/ ( float((newTime - self.lastRunTime).seconds) / 3600/24)
                 if kilobytesPerDay == 0:
                     estFullString = 'no data written'
+                    addToLog = False
                     nDaysLeft.append(-1)
                 elif kilobytesPerDay < 0:
                     estFullString = 'no data written (only deleted)'
+                    addToLog = False
                     nDaysLeft.append(-1)
                 else:
                     daysUntilFull = (part.available ) / kilobytesPerDay 
                     nDaysLeft.append(daysUntilFull)
                     estFullString = "{0:5.0f} days left ({1:2.3f} MB/day)".format(daysUntilFull, kilobytesPerDay/1024)
+                    addToLog = True
             else:
                 estFullString = '(first run)'
+                addToLog = True
                 
-            logMSG += "  {0: <20}: {1: >9.0f} MB / {2: >9.0f} MB    {3:3.2f} % \t {4}".format(part.name, part.used/1024, part.available/1024, part.used/ (part.used+part.available) *100, estFullString ) + newLine
+            if addToLog or self.isInitialCheck:
+                logMSG += "{0: <20}: {1: >9.0f} MB / {2: >9.0f} MB    {3:3.2f} % \t {4}".format(part.name, part.used/1024, part.available/1024, part.used/ (part.used+part.available) *100, estFullString ) + newLine
+        
+        if len(logMSG) == 0:
+            logMSG = "HDD space check ({0})".format(newTime.strftime("%Y-%m-%d %H:%M"))  + newLine + newLine
+        else:
+            header = "HDD space check ({0})".format(newTime.strftime("%Y-%m-%d %H:%M"))  + newLine
+            header += "{0: <20}: {1: >12}   {2: >12}    {3: >7}   {4}".format("Device", "Used", "Available", "Capacity", "Comment") + newLine
+            logMSG = header + logMSG + newLine
+            
+        self.isInitialCheck = False
+        
         self.nDaysLeft = nDaysLeft
-        logMSG += newLine+ newLine
         self.lastPartInfo = newPartInfo
         self.lastRunTime = newTime
-        logMSG += newLine
         return logMSG
 
 

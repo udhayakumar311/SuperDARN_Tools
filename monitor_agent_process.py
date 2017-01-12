@@ -13,29 +13,32 @@ import hdd_monitor
 import hwmonitor_read_thermal
 
 # %% read config file
+def read_config_file(fileName):
+    f = open(fileName, 'r')
+    
+    re4section = re.compile("\[(.*)\]")
+    configDict = dict()
+    with open(fileName, 'r') as f:
+        for line in f:
+           if line.endswith("\n"):
+                line = line[:-1]
+           line = line.strip()
+    
+           if line == "" or  line.startswith("#"):
+               continue
+        
+           if re4section.match(line):
+               sectionName = re4section.search(line).group(1)
+               configDict[sectionName] = dict()
+               continue
+        
+           key, value = line.split(" ", 2)
+           configDict[sectionName][key] = value
+        
+    return configDict
+# %%
 fileName = 'monitor.cfg'
-
-f = open(fileName, 'r')
-
-re4section = re.compile("\[(.*)\]")
-configDict = dict()
-with open(fileName, 'r') as f:
-    for line in f:
-       if line.endswith("\n"):
-            line = line[:-1]
-       line = line.strip()
-
-       if line == "" or  line.startswith("#"):
-           continue
-    
-       if re4section.match(line):
-           sectionName = re4section.search(line).group(1)
-           configDict[sectionName] = dict()
-           continue
-    
-       key, value = line.split(" ", 2)
-       configDict[sectionName][key] = value
-    
+configDict = read_config_file(fileName)    
     
 # %%      
 
@@ -55,7 +58,7 @@ while True:
         startTime = datetime.datetime.now()
         logFile = "rom_" + configDict["general"]["name"] +  startTime.strftime("__%Y-%m-%d") + ".log"
         with open(logFile, 'w+') as f:
-            f.write("Starting monitor agent on " + configDict["general"]['name'] + " (" + str(startTime) + ")\n\n")
+            f.write("Starting monitor agent on " + configDict["general"]['name'] + " (" + startTime.strftime("%Y-%m-%d %H:%M") + ")\n\n")
     
 
     for mon in monitorList:

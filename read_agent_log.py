@@ -4,20 +4,9 @@ Created on Mon Jan  9 20:08:27 2017
 
 @author: mguski
 
-- connect via remote_command()
-- read line from last position to end
-- zip / tar / whatever
-- transfer direct over std
-- unzip
-- parse text
-- create html contend
-
-"tail -n +15 monitor_test__2017-14-09.log | gzip -cf"
-
 """
 # %%
 import remote_command
-import subprocess
 import gzip
 import os
 import datetime
@@ -45,7 +34,7 @@ class liveMonitor():
         print("run of parent class is doing nothing!")
         self.lastRunTime = datetime.datetime.now()
 
-
+# check remote log file via ssh and transfer it compressed
 class monitorLogFile(liveMonitor):
     def __init__(self, nMinutesCheckPeriod,logFileName, userName, remotePC, port=22):
         if sys.version_info[0] == 3:
