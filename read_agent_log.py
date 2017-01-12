@@ -162,6 +162,8 @@ class romLogInterpreter():
         self.computerName = 'unknown'
 
     def update(self, newLines):
+        if newLines == None:
+            return
         idxLine = 0
         while (idxLine < len(newLines)):   
             if len(newLines[idxLine]) == 0:
@@ -233,7 +235,7 @@ class monitor_agent_log(liveMonitor):
         self.nMinutesCheckPeriod = nMinutesCheckPeriod
         self.lastRunTime = []
         self.isInitialCheck = True
-        self.outputFile = outputFile
+        self.outputFile = os.path.join(path_liveData, outputFile)
         
 #        self.logFileName = logFileName
 #        self.userName = userName
@@ -250,23 +252,18 @@ class monitor_agent_log(liveMonitor):
         self.lastRunTime = datetime.datetime.utcnow() 
         newLines = self.logFileMonitor.get_new_lines()
         self.logInterpreter.update(newLines)
+        self.update_html()
         
     def update_html(self):
         with open(self.outputFile, 'w+') as f:
             f.write(self.logInterpreter.summary_status())
         
 # %%
-
-ri = romLogInterpreter()
-lm = monitorTextFile("/home/radar/repos/SuperDARN_Tools/rom_kodiak-aux__2017-01-11.log", "radar", "137.229.27.238", port=22)
-ri.update(lm.oldLines)
-nl = lm.get_new_lines()
-
-# %%
-logFileName = "/home/radar/repos/SuperDARN_Tools/rom_kodiak-aux__2017-01-12.log"
-outputFile = 'status_website/liveData/agent_summary_kod-aux'
-userName = 'radar'
-ip = "137.229.27.238"
-rom_watcher = monitor_agent_log( 11, logFileName, userName, ip, outputFile)
-rom_watcher.update_html()
+if __name__ == '__main__':
+    logFileName = "/home/radar/repos/SuperDARN_Tools/rom_kodiak-aux__2017-01-12.log"
+    outputFile = 'agent_summary_kod-aux'
+    userName = 'radar'
+    ip = "137.229.27.238"
+    rom_watcher = monitor_agent_log( 11, logFileName, userName, ip, outputFile)
+    rom_watcher.update_html()
 
