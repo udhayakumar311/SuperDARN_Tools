@@ -11,8 +11,6 @@
 
 	<style>
 
-	  table, th, td  {border: 1px solid black; border-spacing: 5px;} 
-	  th, td         {padding: 5px;}
 	  #tabelle       {background-color: #8a9da8;}
 	  #spaltengruppe {background-color: #df6c20;}
 	  #spalte        {background-color: #5c82d9;}
@@ -55,33 +53,34 @@
 	    color: white;
 	}
 
+
 	</style>
 
 
 </head>
 
-<body>
+<body onload="reload_rom_kodiakAux()">
 
- <ul>
-  <li><a class="active" href="home.html">Home</a></li>
-  <li><a href="agent_logs_kod-aux.html">Monitor Agent Logs</a></li>
+<ul>
+  <li><a href="home.html">Home</a></li>
+  <li><a class="active" href="agent_logs_kod-aux.html">Monitor Agent Logs</a></li>
   <li><a href="realtime_display_overview.html">RTD Overview</a></li>
-  <li><a href="scheduler_status.html"> Schedule</a></li>
+  <li><a href="scheduler_status.html">Schedule</a></li>
   <li><a href="links.html"> Links</a></li>
 </ul> 
 <p></p>
 <ul style=top:41px;>
+  <li><a> </a></li>
+  <li><a class="active"href="agent_logs_kod-aux.html">Kodiak-Aux</a></li>
 </ul> 
+
 <div style="margin-top:7%;padding:11px 16px;height:1000px;">
-<h2 id=headline>Home</h2> 
-
-
-
-
-
-
-
-</div>
+<h2 id=headline>Monitor Agent Log - kodiak-aux</h2> 
+<Pre>
+   <div id="agent_log_kodiak_aux">
+      <p>Loading Data...</p>
+   </div>
+</Pre>
 
 </body>
 

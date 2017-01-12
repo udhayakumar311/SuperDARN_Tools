@@ -11,6 +11,62 @@ function reloadData()
 
 }
 
+
+
+function reload_rom_kodiakAux()
+{
+   var now = new Date();
+   url = 'liveData/agent_summary_kod-aux?' + now.getTime();
+
+   try {
+      req = new XMLHttpRequest();
+   } catch (e) {
+      try {
+         req = new ActiveXObject("Msxml2.XMLHTTP");
+      } catch (e) {
+         try {
+            req = new ActiveXObject("Microsoft.XMLHTTP");
+         } catch (oc) {
+            alert("No AJAX Support");
+            return;
+         }
+      }
+   }
+
+   req.onreadystatechange = processReqChange_rom_kod_aux;
+   req.open("GET", url, true);
+   req.send(null);
+
+   timeoutID = setTimeout('reload_rom_kodiakAux()', 10000);
+}
+
+
+
+function processReqChange_rom_kod_aux()
+{
+   // If req shows "complete"
+   if (req.readyState == 4)
+   {
+      dataDiv = document.getElementById('agent_log_kodiak_aux');
+
+      // If "OK"
+      if (req.status == 200)
+      {
+         // Set current data text
+         dataDiv.innerHTML = req.responseText;
+
+         // Start new timer (1 min)
+        // timeoutID = setTimeout('reloadData()', 2000);
+      }
+      else
+      {
+         // Flag error
+         dataDiv.innerHTML = '<p>There was a problem retrieving data: ' + req.statusText + '</p>';
+      }
+   }
+}
+
+
 function update_RT_geo_power()
 {
    var plotName = "geo_power"
