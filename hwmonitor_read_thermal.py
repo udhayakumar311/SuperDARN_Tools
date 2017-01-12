@@ -62,16 +62,16 @@ class liveMonitor():
         if self.lastRunTime == []:
             return 0
         
-        time2nextRun = self.lastRunTime + datetime.timedelta(minutes=self.nMinutesCheckPeriod) - datetime.datetime.now()
+        time2nextRun = self.lastRunTime + datetime.timedelta(minutes=self.nMinutesCheckPeriod) - datetime.datetime.utcnow()
         return time2nextRun.seconds /60
     
     def run(self):
         print("run of parent class is doing nothing!")
-        self.lastRunTime = datetime.datetime.now()    
+        self.lastRunTime = datetime.datetime.utcnow()    
     
 class computer_temperature_monitor(liveMonitor):
     def run(self):
-        newTime     = datetime.datetime.now()
+        newTime     = datetime.datetime.utcnow()
         self.lastRunTime = newTime
         # check
         data = read_hardware_monitor_status()

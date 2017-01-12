@@ -54,8 +54,8 @@ if "computer_temperature" in configDict.keys():
   
 while True:
     # create new log file
-    if logFile == None or datetime.datetime.now().day != startTime.day:
-        startTime = datetime.datetime.now()
+    if logFile == None or datetime.datetime.utcnow().day != startTime.day:
+        startTime = datetime.datetime.utcnow()
         logFile = "rom_" + configDict["general"]["name"] +  startTime.strftime("__%Y-%m-%d") + ".log"
         with open(logFile, 'w+') as f:
             f.write("Starting monitor agent on " + configDict["general"]['name'] + " (" + startTime.strftime("%Y-%m-%d %H:%M") + ")\n\n")
