@@ -31,7 +31,7 @@ import numpy as np
 class structDummy:
     pass
 
-now = datetime.datetime.now()
+now = datetime.datetime.utcnow()
 # %%
 
 
@@ -208,7 +208,7 @@ def read_swg_schedule(month, year):
     
     
 # %%
-def create_figure(scheduale_list, plotRange, labelSWGschedule = True):
+def create_figure(schedule_list, plotRange, labelSWGschedule = True):
     fig = plt.figure(figsize=[16, 10])
     ax = plt.subplot2grid((1,9), (0,0), colspan=8)
     
@@ -219,17 +219,26 @@ def create_figure(scheduale_list, plotRange, labelSWGschedule = True):
     iSchedule = 0
     
     now = datetime.datetime.utcnow()
+    swg_schedule = read_swg_schedule(now.month, now.year)
+    
+    swg_plotNextMonth = now.day > 15
+    if swg_plotNextMonth:
+        nextMonth = now + datetime.timedelta(days=30)
+        swg_schedule_nextMonth = read_swg_schedule(nextMonth.month, nextMonth.year)
+    
     xLimStart = now.date() + datetime.timedelta(days=plotRange[0])
     xLimEnd = now.date() + datetime.timedelta(days=plotRange[1])
     
     for iRadar in range(len(schedule_list)):
-        if iRadar == 0 or schedule_file_list[iRadar][0].split("/")[-1][:1] != schedule_file_list[iRadar-1][0].split("/")[-1][:1]:
+        if iRadar == 0 or schedule_list[iRadar][0].url_schedule.split("/")[-1][:1] != schedule_list[iRadar-1][0].url_schedule.split("/")[-1][:1]:
             iSchedule += 1
         else:
             iSchedule += 0.3
         for iSchedInRadar, currSchedule in enumerate(schedule_list[iRadar]):
             iSchedule += 0.8
-            yLabelList.append(schedule_file_list[iRadar][iSchedInRadar].split("/")[-1][:-4])
+      #      yLabelList.append(schedule_file_list[iRadar][iSchedInRadar].split("/")[-1][:-4])
+            yLabelList.append(currSchedule.url_schedule.split("/")[-1][:-4])
+            
             yTickList.append(iSchedule)
             for iEntry in range(len(currSchedule.durationList)):
                 #if currSchedule.startTimeList[iEntry] > now + datetime.timedelta(days=plotRange[1]) or (currSchedule.startTimeList[iEntry] + datetime.timedelta( minutes=currSchedule.durationList[iEntry])) < now + datetime.timedelta(days=plotRange[0]):
@@ -324,7 +333,7 @@ def create_figure(scheduale_list, plotRange, labelSWGschedule = True):
 def write_status_html_text(fileName,schedule_list):
     
     nMonth2show = 3
-    now = datetime.datetime.now()
+    now = datetime.datetime.utcnow()
     dateList = []
     monthNameList = []
     SWG_schedule_available = []
@@ -372,7 +381,7 @@ def write_status_html_text(fileName,schedule_list):
         else:
              if SWG_schedule_available[iMonth]:
                  
-                 daysLeft = (dateList[iMonth] - datetime.datetime.now() ).days
+                 daysLeft = (dateList[iMonth] - datetime.datetime.utcnow() ).days
                  if  daysLeft < 10:
                      htmlTable +=  " <td id=red>Not Avaiable (" + str(int(daysLeft)) + " days left)</td> "
                  else:
@@ -396,7 +405,7 @@ def write_status_html_text(fileName,schedule_list):
     htmlTable += allErrorMSGs #.replace('\n', '<br>\n')
     htmlTable += '\n</p></Pre>\n'
     
-    htmlTable += '\n[ last update ' + now.strftime("%Y/%m/%d %H:%M %Z") + '] \n'
+    htmlTable += '\n[ last update ' + now.strftime("%Y/%m/%d %H:%M %Z") + ' UTC] \n'
     
     # write
     
@@ -415,43 +424,43 @@ def save_figure(fileName, schedule_list):
 
 # %%    
     
-
-root_schedule_url = 'https://raw.githubusercontent.com/UAF-SuperDARN-OPS/schedule_files/'
-
-schedule_file_list = [["adak/ade/ade.a.scd", "adak/ade/ade.a.special"], ["adak/adw/adw.a.scd", "adak/adw/adw.a.special"], ["kodiak/kod/kod.c.scd", "kodiak/kod/kod.c.campaign.scd"], ["kodiak/kod/kod.d.scd", "kodiak/kod/kod.d.campaign.scd"], ['mcmurdo/mcm/mcm.a.scd'], ['mcmurdo/mcm/mcm.b.scd'], ['southpole/sps/sps.a.scd']]
-#schedule_file_list = [[]]
-#, 'kodiak/kod/kod.c.campaign.scd', 'kodiak/kod/kod.d.campaign.scd'
-schedule_file_list.reverse() # reverse order to have adak at the top
-schedule_list = []
-
-for radar_file_list in schedule_file_list:
-    schedule_list.append([])
-    for url_schedule in radar_file_list:
-        schedule_list[-1].append(read_schedule(root_schedule_url + url_schedule))
-
-now = datetime.datetime.now()
-swg_schedule = read_swg_schedule(now.month, now.year)
-
-swg_plotNextMonth = now.day > 15
-if swg_plotNextMonth:
-    nextMonth = now + datetime.timedelta(days=30)
-    swg_schedule_nextMonth = read_swg_schedule(nextMonth.month, nextMonth.year)
-
-# %% write data for website
-fileName_txt = 'status_website/schedule_status_text'
-fileName_png = "status_website/schedule_plot.png"
-
-save_figure(fileName_png, schedule_list)
-write_status_html_text(fileName_txt,schedule_list)
-
-# %%
-
-# %%
-plotRange = [-1, 3] # in days from today
-##fig = create_figure(schedule_list, plotRange)
-
-#plotRange = [-25, 35] # in days from today
-#labelSWGschedule = False
-
-##plt.show()
-#savefig('foo.png')
+if __name__ == '__main__':
+    root_schedule_url = 'https://raw.githubusercontent.com/UAF-SuperDARN-OPS/schedule_files/'
+    
+    schedule_file_list = [["adak/ade/ade.a.scd", "adak/ade/ade.a.special"], ["adak/adw/adw.a.scd", "adak/adw/adw.a.special"], ["kodiak/kod/kod.c.scd", "kodiak/kod/kod.c.campaign.scd"], ["kodiak/kod/kod.d.scd", "kodiak/kod/kod.d.campaign.scd"], ['mcmurdo/mcm/mcm.a.scd'], ['mcmurdo/mcm/mcm.b.scd'], ['southpole/sps/sps.a.scd']]
+    #schedule_file_list = [[]]
+    #, 'kodiak/kod/kod.c.campaign.scd', 'kodiak/kod/kod.d.campaign.scd'
+    schedule_file_list.reverse() # reverse order to have adak at the top
+    schedule_list = []
+    
+    for radar_file_list in schedule_file_list:
+        schedule_list.append([])
+        for url_schedule in radar_file_list:
+            schedule_list[-1].append(read_schedule(root_schedule_url + url_schedule))
+    
+    now = datetime.datetime.utcnow()
+    swg_schedule = read_swg_schedule(now.month, now.year)
+    
+    swg_plotNextMonth = now.day > 15
+    if swg_plotNextMonth:
+        nextMonth = now + datetime.timedelta(days=30)
+        swg_schedule_nextMonth = read_swg_schedule(nextMonth.month, nextMonth.year)
+    
+    # %% write data for website
+    fileName_txt = 'status_website/schedule_status_text'
+    fileName_png = "status_website/schedule_plot.png"
+    
+    save_figure(fileName_png, schedule_list)
+    write_status_html_text(fileName_txt,schedule_list)
+    
+    # %%
+    
+    # %%
+    #plotRange = [-1, 3] # in days from today
+    ##fig = create_figure(schedule_list, plotRange)
+    
+    #plotRange = [-25, 35] # in days from today
+    #labelSWGschedule = False
+    
+    ##plt.show()
+    #savefig('foo.png')

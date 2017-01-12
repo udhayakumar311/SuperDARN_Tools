@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
 Created on Thu Jan 12 10:04:13 2017
@@ -17,7 +18,7 @@ import time
 
 import helper_functions
 import read_agent_log
-
+import updateWebsite_schedules
 # %% read config
 fileName = 'monitor_server.cfg'
 configDict = helper_functions.read_config_file(fileName)    
@@ -26,11 +27,13 @@ configDict = helper_functions.read_config_file(fileName)
 logFile = None
 processList = []
 for key in configDict.keys():
+    key = key.lower().strip()
     if key == "agent_log":
-        configDict[key]
         processList.append(read_agent_log.monitor_agent_log( float(configDict[key]['checkPeriod']), configDict[key]['logFileName'], configDict[key]['userName'], configDict[key]['ip'], configDict[key]['outputFile']))
+    elif key == "schedules":
+        processList.append(updateWebsite_schedules.scheduleUpdater( float(configDict[key]['checkPeriod'])))
     else:
-        print("unknown key: " + key)
+        print("unknown key: " + key + "")
     
 
   
