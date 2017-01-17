@@ -40,7 +40,9 @@ for key in configDict.keys():
 while True:
 
     for process in processList:
+        print("Checking process: {} (NminLeft: {})".format(process.__str__().split(".")[-1].split(" ")[0], process.minutes_to_next_check()))
         if process.minutes_to_next_check() <= 0:
+            print("Running process: {}".format(process.__str__().split(".")[-1].split(" ")[0]))
             process.run() # TODO: output is warning/error msg 
 
             

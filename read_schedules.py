@@ -401,7 +401,7 @@ def write_status_html_text(fileName,schedule_list):
     
     htmlTable += "</table>\n"
     
-    htmlTable += '\n\n<h3> Error messages: </h3>\n<Pre>\n<p style="margin-left:30px;">\n'
+    htmlTable += '\n\n<h3> Git consistency check messages: </h3>\n<Pre>\n<p style="margin-left:30px;">\n'
     htmlTable += allErrorMSGs #.replace('\n', '<br>\n')
     htmlTable += '\n</p></Pre>\n'
     
@@ -447,20 +447,19 @@ if __name__ == '__main__':
         swg_schedule_nextMonth = read_swg_schedule(nextMonth.month, nextMonth.year)
     
     # %% write data for website
-    fileName_txt = 'status_website/schedule_status_text'
-    fileName_png = "status_website/schedule_plot.png"
+  #  fileName_txt = 'status_website/schedule_status_text'
+  #  fileName_png = "status_website/schedule_plot.png"
     
-    save_figure(fileName_png, schedule_list)
-    write_status_html_text(fileName_txt,schedule_list)
+  #  save_figure(fileName_png, schedule_list)
+  #  write_status_html_text(fileName_txt,schedule_list)
     
     # %%
-    
+   
     # %%
     #plotRange = [-1, 3] # in days from today
     ##fig = create_figure(schedule_list, plotRange)
     
-    #plotRange = [-25, 35] # in days from today
-    #labelSWGschedule = False
+    plotRange = [-5, 35] # in days from today
+    labelSWGschedule = False
     
-    ##plt.show()
-    #savefig('foo.png')
+    fig = create_figure(schedule_list, plotRange) 

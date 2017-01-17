@@ -224,7 +224,7 @@ class liveMonitor():
             return 0
         
         time2nextRun = self.lastRunTime + datetime.timedelta(minutes=self.nMinutesCheckPeriod) - datetime.datetime.utcnow()
-        return time2nextRun.seconds /60
+        return time2nextRun.total_seconds() /60
     
     def run(self):
         print("run of parent class is doing nothing!")

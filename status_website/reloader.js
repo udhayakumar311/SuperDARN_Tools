@@ -1,5 +1,14 @@
 var req;
 
+
+var myVar = setInterval(updateClock, 1000);
+
+function updateClock() {
+    var d = new Date();
+    document.getElementById("clock").innerHTML = d.toUTCString().replace("GMT", "UTC");
+   //document.getElementById("clock").innerHTML = d.getUTCHours() + ":" + d.getUTCMinutes() + ":" + d.getUTCSeconds() + " (UTC)" 
+}
+
 function reloadData()
 {
 
