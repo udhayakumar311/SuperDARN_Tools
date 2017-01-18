@@ -111,7 +111,7 @@ class hddPartitionStatus():
             self.commentList.append(comment)
             
     def get_status(self):
-        out =  "{0: <20}: {1: >12}   {2: >12}    {3: >7}   {4}\n".format("Device", "Used", "Available", "Capacity", "Comment")
+        out =  "{0: <20}: {1: >12}   {2: >12}    {3: >7}   {4}\n".format("Device", "Used", "Available", "Capacity", "Last message")
         for iPart in range(len(self.devNames)):
             out += "{0: <20}: {1: >9.0f} MB / {2: >9.0f} MB    {3:3.2f} % \t {4}\n".format(self.devNames[iPart], self.usedList[iPart], self.availableList[iPart], self.percentageList[iPart], self.commentList[iPart] ) 
         return out
@@ -126,14 +126,23 @@ class PCtemperatureStatus():
         self.statusLines = []
         self.tempList = []
         self.limitList = []
+        self.sensorNameList = []
         
     def addNewStatus(self, line):
             
         if self.reTempLine.match(line): # initial log msg
             res = self.reTempLine.search(line)
-            self.statusLines.append(line + '\n')
-            self.tempList.append(res.group(1))
-            self.limitList.append(res.group(2))
+            sensorName = line.split(' = ')[0]
+            if sensorName in self.sensorNameList:
+                idx = self.sensorNameList.index(sensorName)
+                self.statusLines[idx] = line + '\n'
+                self.tempList[idx] = res.group(1)
+                self.limitList[idx] = res.group(2)
+            else:
+                self.sensorNameList.append(sensorName)
+                self.statusLines.append(line + '\n')
+                self.tempList.append(res.group(1))
+                self.limitList.append(res.group(2))
         elif line.startswith('Temperatures: '):
             for iTemp, temp in enumerate(line[14:].split("|")[:-1]):
                 statLine = self.statusLines[iTemp]
@@ -141,6 +150,8 @@ class PCtemperatureStatus():
                 statLine = statLine[:res.span(1)[0]] + temp + statLine[res.span(1)[1]:] 
                 self.statusLines[iTemp] = statLine
                 self.tempList[iTemp] = float(temp)
+        else:
+             print("unknown line (temp status): {}".format(line))   
        
     def get_status(self):
         out =  ""
@@ -231,27 +242,37 @@ class liveMonitor():
         self.lastRunTime = datetime.datetime.utcnow()    
 #
 class monitor_agent_log(liveMonitor):
-    def __init__(self, nMinutesCheckPeriod, logFileName, userName, ip, outputFile, port=22):
+    def __init__(self, nMinutesCheckPeriod, logFileNamePattern, userName, ip, outputFile, port=22):
         self.nMinutesCheckPeriod = nMinutesCheckPeriod
         self.lastRunTime = []
         self.isInitialCheck = True
         self.outputFile = os.path.join(path_liveData, outputFile)
         
-#        self.logFileName = logFileName
-#        self.userName = userName
-#        self.ip = ip
-#        self.port = port
+        self.logFileNamePattern = logFileNamePattern
+        self.userName = userName
+        self.ip = ip
+        self.port = port
         
-        self.logFileMonitor = monitorTextFile(logFileName, userName, ip, port=port)
         self.logInterpreter = romLogInterpreter()
+        self.init_new_log_file()
+        
+        
+    
+    def init_new_log_file(self):
+        self.dateOfLogFile  = datetime.datetime.utcnow()
+        logFileName = self.dateOfLogFile.strftime(self.logFileNamePattern)
+        self.logFileMonitor = monitorTextFile(logFileName, self.userName, self.ip, port=self.port)
         if self.logFileMonitor.oldLines != None:
             self.logInterpreter.update(self.logFileMonitor.oldLines)
-    
-    
+            
+            
     def run(self):
         self.lastRunTime = datetime.datetime.utcnow() 
         newLines = self.logFileMonitor.get_new_lines()
         self.logInterpreter.update(newLines)
+        if self.dateOfLogFile != datetime.datetime.utcnow().day:  # new day
+            self.init_new_log_file()
+        
         self.update_html()
         
     def update_html(self):

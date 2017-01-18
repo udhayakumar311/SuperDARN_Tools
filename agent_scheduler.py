@@ -35,6 +35,8 @@ while True:
         logFile = "rom_" + configDict["general"]["name"] +  startTime.strftime("__%Y-%m-%d") + ".log"
         with open(logFile, 'w+') as f:
             f.write("Starting monitor agent on " + configDict["general"]['name'] + " (" + startTime.strftime("%Y-%m-%d %H:%M") + ")\n\n")
+        for mon in monitorList:
+            mon.isInitialCheck = True
     
 
     for mon in monitorList:
