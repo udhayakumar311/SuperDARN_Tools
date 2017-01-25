@@ -347,14 +347,14 @@ def write_status_html_text(fileName,schedule_list):
         except:
             SWG_schedule_available.append(False)
     
-    githubSchedAvaiable = []
+    githubSchedAvailable = []
     
     for iMonth in range(nMonth2show):
         monthNameList.append(dateList[iMonth].strftime("%B"))
-        githubSchedAvaiable.append( [])
+        githubSchedAvailable.append( [])
         for iSchedule in range(len(schedule_list)):
             scheule_end = schedule_list[iSchedule][0].startTimeList[-1] + datetime.timedelta(minutes=schedule_list[iSchedule][0].durationList[-1])
-            githubSchedAvaiable[iMonth].append(scheule_end >= dateList[iMonth+1])
+            githubSchedAvailable[iMonth].append(scheule_end >= dateList[iMonth+1])
     
     githubSchedErrors = []
     allErrorMSGs = ""
@@ -369,25 +369,25 @@ def write_status_html_text(fileName,schedule_list):
     htmlTable +=  '<tr> <td>Software Working Group</td> '
     for iMonth in range(nMonth2show):
         if SWG_schedule_available[iMonth]:
-             htmlTable +=  " <td id=green>Avaiable</td> "
+             htmlTable +=  " <td id=green>Available</td> "
         else:
-             htmlTable +=  " <td id=nothing>Not Avaiable</td> "
+             htmlTable +=  " <td id=nothing>Not Available</td> "
     htmlTable += "</tr> \n"
     
     htmlTable +=  '<tr> <td>Git Schedule </td> '
     for iMonth in range(nMonth2show):
-        if all(githubSchedAvaiable[iMonth]):
-             htmlTable +=  " <td id=green>Avaiable</td> "
+        if all(githubSchedAvailable[iMonth]):
+             htmlTable +=  " <td id=green>Available</td> "
         else:
              if SWG_schedule_available[iMonth]:
                  
                  daysLeft = (dateList[iMonth] - datetime.datetime.utcnow() ).days
                  if  daysLeft < 10:
-                     htmlTable +=  " <td id=red>Not Avaiable (" + str(int(daysLeft)) + " days left)</td> "
+                     htmlTable +=  " <td id=red>Not Available (" + str(int(daysLeft)) + " days left)</td> "
                  else:
-                     htmlTable +=  " <td id=orange>Not Avaiable (" + str(int(daysLeft)) + " days left)</td> "
+                     htmlTable +=  " <td id=orange>Not Available (" + str(int(daysLeft)) + " days left)</td> "
              else:
-                 htmlTable +=  " <td id=green>Not Avaiable</td> "
+                 htmlTable +=  " <td id=green>Not Available</td> "
     htmlTable += "</tr> \n"
     
     

@@ -214,36 +214,41 @@ def parse_errlog_file(errorLogFileName):
 
 # %%
 
-fileName = "errlog.kod.c.20161230"
+#fileName = "errlog.kod.c.20161230"
 
-fileName = "errlog.kod.d.20161230"
-#fileName = "errlog.adw.a.20161221"
-errorLogFileName = '/home/mguski/Documents/exampleLogFiles/' + fileName
+#fileName = "errlog.kod.d.20161230"
+##fileName = "errlog.adw.a.20161221"
+#errorLogFileName = '/home/mguski/Documents/exampleLogFiles/' + fileName
 
+
+
+errorLogFileName = "/home/mguski/Documents/exampleLogFiles/2017-01-21-mcm_restart_problem/errlog.mcm.b.20170123"
 
 scanList, unknownLogs = parse_errlog_file(errorLogFileName)
 
 
 #%%
-import pickle
-
-# obj0, obj1, obj2 are created here...
-
-# Saving the objects:
-pickleFileName = errorLogFileName + '_parsed.pickle'
-with open(pickleFileName, 'wb') as f:
-    pickle.dump([scanList, unknownLogs], f)
-
-import gzip
-import shutil
-with open(pickleFileName, 'rb') as f_in:
-    with gzip.open(pickleFileName + '.gzip', 'wb') as f_out:
-        shutil.copyfileobj(f_in, f_out)
-
-
-# Getting back the objects:
-with open('objs.pickle', 'rb') as f:  # Python 3: open(..., 'rb')
-    scanList, unknownLogs = pickle.load(f)
+loadData = False
+if loadData:
+    import pickle
+    
+    # obj0, obj1, obj2 are created here...
+    
+    # Saving the objects:
+    pickleFileName = errorLogFileName + '_parsed.pickle'
+    with open(pickleFileName, 'wb') as f:
+        pickle.dump([scanList, unknownLogs], f)
+    
+    import gzip
+    import shutil
+    with open(pickleFileName, 'rb') as f_in:
+        with gzip.open(pickleFileName + '.gzip', 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    
+    
+    # Getting back the objects:
+    with open('objs.pickle', 'rb') as f:  # Python 3: open(..., 'rb')
+        scanList, unknownLogs = pickle.load(f)
 
 # %%
 
@@ -255,6 +260,20 @@ for iScan in range(1,len(scanList)):
         scanChangeList.append([scanList[iScan].programName, scanList[iScan].date_start])
 scanChangeList.append(["End of Log file", timeVec[-1]])
 
+
+# %%
+
+fig = plt.figure(figsize=[16, 10])
+ax = plt.subplot(211)
+plt.plot(t_a,nSeq_a, 'o',label="mcm.a" )
+plt.grid(True)
+plt.legend()
+
+plt.subplot(212, sharex=ax)
+
+plt.plot(t_b,nSeq_b, 'o',label="mcm.b" )
+plt.grid(True)
+plt.legend()
 # %% plot some things
 
 fig = plt.figure(figsize=[16, 10])
@@ -262,13 +281,13 @@ fig = plt.figure(figsize=[16, 10])
 
 
 # -%%
-ax = plt.subplot2grid((20,1), (1,0), rowspan=3)
+ax1 = plt.subplot2grid((20,1), (1,0), rowspan=3)
 nSeqPerSecList = [seq.nSequences for seq in scanList]
 plt.plot(timeVec, nSeqPerSecList, "+")
-ax.set_ylabel("seq / sec")
+ax1.set_ylabel("seq / sec")
 plt.grid(True)
-ax.set_xticklabels([])
-masterAx = ax
+#ax1.set_xticklabels([])
+masterAx = ax1
 
 ax = plt.subplot2grid((20,1), (0,0), sharex=masterAx)
 for iScan in range(len(scanChangeList)-1):
@@ -285,14 +304,14 @@ freqVec = [seq.tx_freq/1000 for seq in scanList]
 plt.plot(timeVec, freqVec, '+')
 ax.set_ylabel("Freq in MHz")
 plt.grid(True)
-ax.set_xticklabels([])
+#ax.set_xticklabels([])
 
 
 ax = plt.subplot2grid((5,1), (2,0), sharex=masterAx)
 noiseVec = [seq.noise for seq in scanList]
 plt.plot(timeVec, noiseVec, 'o')
 plt.grid(True)
-ax.set_xticklabels([])
+#ax.set_xticklabels([])
 ax.set_ylabel("Noise energy ???")
 
 
@@ -301,7 +320,7 @@ plotData = [seq.beamNumber for seq in scanList]
 plt.plot(timeVec, plotData, '|')
 ax.set_ylabel("beam number")
 plt.grid(True)
-ax.set_xticklabels([])
+#ax.set_xticklabels([])
 
 
 ax = plt.subplot2grid((5,1), (4,0), sharex=masterAx)
@@ -315,23 +334,14 @@ plt.grid(True)
 plt.legend()
 
 
-plt.show()
+#plt.show()
 
 # %% plot some things
 
 fig = plt.figure(figsize=[16, 10])
 # -%%
 
-ax = plt.subplot2grid((5,1), (1,0))
-ax = masterAx
-freqVec = [seq.newOptFreq for seq in scanList]
-plt.plot(timeVec, freqVec, '+')
-ax.set_ylabel("New opt freq")
-plt.grid(True)
-ax.set_xticklabels([])
-ax.set_ylim(max(ax.get_ylim()[0], 0) , max(ax.get_ylim()[1], 1))
-
-ax = plt.subplot2grid((20,1), (0,0), sharex=masterAx)
+ax = plt.subplot2grid((20,1), (0,0))
 for iScan in range(len(scanChangeList)-1):
     ax.barh(1,  (scanChangeList[iScan+1][1] - scanChangeList[iScan][1]).total_seconds()/60/60/24, left=scanChangeList[iScan][1], align='center')
     textPosition = scanChangeList[iScan][1] +  (scanChangeList[iScan+1][1] - scanChangeList[iScan][1])/2
@@ -339,6 +349,18 @@ for iScan in range(len(scanChangeList)-1):
 ax.set_xlim(timeVec[0], timeVec[-1])
 ax.axis('off')
 plt.title(errorLogFileName.split("/")[-1][7:12] + "  " + str(timeVec[0].date()))
+ax = masterAx
+
+ax = plt.subplot2grid((5,1), (1,0), sharex=masterAx)
+freqVec = [seq.newOptFreq for seq in scanList]
+plt.plot(timeVec, freqVec, '+')
+ax.set_ylabel("New opt freq")
+plt.grid(True)
+#ax.set_xticklabels([])
+ax.set_ylim(min(ax.get_ylim()[0], 0) , max(ax.get_ylim()[1], 1))
+
+
+
 
 ax = plt.subplot2grid((20,1), (1,0), rowspan=3, sharex=masterAx)
 for seq in scanList:
@@ -348,7 +370,7 @@ for seq in scanList:
 ax.set_xlim(timeVec[0], timeVec[-1])
 ax.set_ylabel("connection messages")
 plt.grid(True)
-ax.set_xticklabels([])
+#ax.set_xticklabels([])
 ax.axis('off')
 
 ax = plt.subplot2grid((5,1), (2,0), sharex=masterAx)
@@ -364,7 +386,7 @@ for seq in scanList:
 
 plt.errorbar(timeVec, cf_start, yerr=cf_range, capsize=0, fmt="none")
 plt.grid(True)
-ax.set_xticklabels([])
+#ax.set_xticklabels([])
 ax.set_ylabel("Clear Freq (in Mhz)")
 ax.set_ylim([max(ax.get_ylim()[0]-1,8), min(ax.get_ylim()[1]+2,18)])
 
@@ -382,7 +404,7 @@ ax.set_yticks([0,1])
 ax.set_yticklabels(["no", "yes"])
 plt.grid(True)
 plt.legend()
-ax.set_xticklabels([])
+#ax.set_xticklabels([])
 
 
 
