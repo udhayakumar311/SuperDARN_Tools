@@ -78,7 +78,7 @@ function processReqChange_rom_kod_aux()
 
 function update_RT_geo_power()
 {
-   var plotName = "geo_power"
+   var plotName = "geo_velocity"
    var now = new Date();
    var baseURL = 'http://superdarn.gi.alaska.edu/java/images/gui/'
    var siteArray = ["ade", "kodc", "mcma", "ksr", "adw", "kodd", "mcmb", "sps"];
@@ -96,7 +96,7 @@ function update_RT_geo_power()
 
 function update_RT_fan_power()
 {
-   var plotName = "fan_power"
+   var plotName = "fan_velocity"
    var now = new Date();
    var baseURL = 'http://superdarn.gi.alaska.edu/java/images/gui/'
    var siteArray = ["ade", "kodc", "mcma", "ksr", "adw", "kodd", "mcmb", "sps"];
