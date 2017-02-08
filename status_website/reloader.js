@@ -78,7 +78,7 @@ function processReqChange_rom_kod_aux()
 
 function update_RT_geo_power()
 {
-   var plotName = "geo_velocity"
+   var plotName = "geo_power"
    var now = new Date();
    var baseURL = 'http://superdarn.gi.alaska.edu/java/images/gui/'
    var siteArray = ["ade", "kodc", "mcma", "ksr", "adw", "kodd", "mcmb", "sps"];
@@ -94,7 +94,63 @@ function update_RT_geo_power()
 
 }
 
+function update_RT_geo_velocity()
+{
+   var plotName = "geo_velocity"
+   var now = new Date();
+   var baseURL = 'http://superdarn.gi.alaska.edu/java/images/gui/'
+   var siteArray = ["ade", "kodc", "mcma", "ksr", "adw", "kodd", "mcmb", "sps"];
+
+   for (let site of siteArray) {
+   	document.images[site].src = baseURL + site + '/' + plotName + '.png?' + now.getTime();
+   	document.getElementById(site + "_href").href = baseURL + site + '/' + plotName + '.png' ;
+}
+
+
+   // Start new timer (in ms)
+  timeoutID = setTimeout('update_RT_geo_velocity()', 5000);
+
+}
+
+function update_RT_geo_width()
+{
+   var plotName = "geo_width"
+   var now = new Date();
+   var baseURL = 'http://superdarn.gi.alaska.edu/java/images/gui/'
+   var siteArray = ["ade", "kodc", "mcma", "ksr", "adw", "kodd", "mcmb", "sps"];
+
+   for (let site of siteArray) {
+   	document.images[site].src = baseURL + site + '/' + plotName + '.png?' + now.getTime();
+   	document.getElementById(site + "_href").href = baseURL + site + '/' + plotName + '.png' ;
+}
+
+
+   // Start new timer (in ms)
+  timeoutID = setTimeout('update_RT_geo_width()', 5000);
+
+}
+
+
 function update_RT_fan_power()
+{
+   var plotName = "fan_power"
+   var now = new Date();
+   var baseURL = 'http://superdarn.gi.alaska.edu/java/images/gui/'
+   var siteArray = ["ade", "kodc", "mcma", "ksr", "adw", "kodd", "mcmb", "sps"];
+
+   for (let site of siteArray) {
+   	document.images[site].src = baseURL + site + '/' + plotName + '.png?' + now.getTime();
+   	document.getElementById(site + "_href").href = baseURL + site + '/' + plotName + '.png' ;
+}
+
+
+   // Start new timer (in ms)
+  timeoutID = setTimeout('update_RT_fan_power()', 5000);
+
+}
+
+
+function update_RT_fan_velocity()
 {
    var plotName = "fan_velocity"
    var now = new Date();
@@ -108,7 +164,26 @@ function update_RT_fan_power()
 
 
    // Start new timer (in ms)
-  timeoutID = setTimeout('update_RT_fan_power()', 5000);
+  timeoutID = setTimeout('update_RT_fan_velocity()', 5000);
+
+}
+
+
+function update_RT_fan_width()
+{
+   var plotName = "fan_width"
+   var now = new Date();
+   var baseURL = 'http://superdarn.gi.alaska.edu/java/images/gui/'
+   var siteArray = ["ade", "kodc", "mcma", "ksr", "adw", "kodd", "mcmb", "sps"];
+
+   for (let site of siteArray) {
+   	document.images[site].src = baseURL + site + '/' + plotName + '.png?' + now.getTime();
+   	document.getElementById(site + "_href").href = baseURL + site + '/' + plotName + '.png' ;
+}
+
+
+   // Start new timer (in ms)
+  timeoutID = setTimeout('update_RT_fan_width()', 5000);
 
 }
 

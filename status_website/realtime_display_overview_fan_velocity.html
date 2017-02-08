@@ -48,11 +48,6 @@
 	    color: white;
 	}
 
-	li a.activeSub {
-	    background-color: #4CAF70;
-	    color: white;
-	}
-
 	li a:hover:not(.active) {
 	    background-color: #555;
 	    color: white;
@@ -64,7 +59,7 @@
 
 </head>
 
-<body onload="update_RT_geo_power()">
+<body onload="update_RT_fan_velocity()">
 
 <ul>
   <li><a href="home.html">Home</a></li>
@@ -78,18 +73,19 @@
 <ul style=top:41px;>
   <li><a> </a></li>
   <li><a href="realtime_display_overview.html">Time Plot</a></li>
-  <li><a class="active" href="realtime_display_overview_geo_power.html">Geographic Plot</a></li>
-  <li><a href="realtime_display_overview_fan_power.html">Beam vs. Gate Plot</a></li>
+  <li><a href="realtime_display_overview_geo_power.html">Geographic Plot</a></li>
+  <li><a class="active" href="realtime_display_overview_fan_power.html">Beam vs. Gate Plot</a></li>
 </ul> 
 <ul style=top:82px;>
   <li><a> </a></li>
-  <li><a class="active" href="realtime_display_overview_geo_power.html">Power</a></li>
-  <li><a href="realtime_display_overview_geo_velocity.html">Velocity</a></li>
-  <li><a href="realtime_display_overview_geo_width.html">Spectral Width</a></li>
+  <li><a href="realtime_display_overview_fan_power.html">Power</a></li>
+  <li><a class="active"  href="realtime_display_overview_fan_velocity.html">Velocity</a></li>
+  <li><a href="realtime_display_overview_fan_width.html">Spectral Width</a></li>
 </ul> 
 
 
 <div style="margin-top:5%;padding:11px 16px;height:1000px;">
+
 
 
 <table width="2000">
