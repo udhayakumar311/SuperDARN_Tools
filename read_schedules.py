@@ -26,6 +26,8 @@ Created on Mon Dec 26 11:48:59 2016
 #import urllib.request
 from six.moves import urllib
 import datetime
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 

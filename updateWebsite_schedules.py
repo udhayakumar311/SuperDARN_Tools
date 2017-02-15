@@ -6,6 +6,7 @@ Created on Thu Jan 12 11:10:29 2017
 """
 import datetime
 import read_schedules
+import os
 
 class liveMonitor():
     def __init__(self, nMinutesCheckPeriod):
@@ -48,9 +49,13 @@ class scheduleUpdater(liveMonitor):
     
         #read_schedules.save_figure(fileName_png, schedule_list)
         dayList = [[-1, 3], [3, 8], [8,13], [13,18], [18, 23], [23, 28], [28, 33] ]
-        fileName_png_template = "status_website/liveData/schedule_plot_{}.png"
+
+
+        fileName_png_template = os.path.dirname(__file__) + "/status_website/liveData/schedule_plot_{}.png"
+
         for iPlot, dayLimits in enumerate(dayList):
             read_schedules.save_figure(fileName_png_template.format(iPlot), schedule_list, dayLimits)
+            print("wrote imgae file {}".format(iPlot))
             
         read_schedules.write_status_html_text(fileName_txt,schedule_list)
     
