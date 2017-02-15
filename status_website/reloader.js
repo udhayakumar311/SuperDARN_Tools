@@ -267,8 +267,8 @@ function processReqChange()
 function reloadGraph() {
    var now = new Date();
 
-   document.images['schedule_plot'].src = 'liveData/schedule_plot.png?' + now.getTime();
-
+  // document.images['schedule_plot'].src = 'liveData/schedule_plot.png?' + now.getTime();
+   document.images['schedule_plot5'].src = document.images['schedule_plot5'].src + '?' + now.getTime();
    // Start new timer (1 min)
   //timeoutID = setTimeout('reloadGraph()', 2000);
 }

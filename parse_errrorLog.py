@@ -161,7 +161,7 @@ class scanClass():
 # %%
 
 def parse_errlog_file(errorLogFileName):
-    controlProgramNames = ["normalsound (fast)","normalscan (fast)", "rbspscan", "themisscan" ] # known and tested control programs
+    controlProgramNames = ["normalsound (fast)","normalscan (fast)", "rbspscan", "themisscan", "pcodescan_bm9_15km", "pcodecamp_bm3_15km (fast)","pcodescan_bm3_15km", "pcodecamp_bm9_15km (onesec)", "pcodescan (fast)"] # known and tested control programs
     dataProcesses       = ["rawacfwrite","fitacfwrite", "rtserver" ]
     dataProcessIgnoreLogs = ["Opening file." , "Closing file.", "Reset.", "Child (S|s)erver process (starting|terminating)", "\[.*\] : (Open|Close) Connection.", "(Parent|Child) PID \d*", "Listening on port \d*."]
     
@@ -223,6 +223,8 @@ def parse_errlog_file(errorLogFileName):
 
 
 errorLogFileName = "/home/mguski/Documents/exampleLogFiles/2017-01-21-mcm_restart_problem/errlog.mcm.b.20170123"
+errorLogFileName = "/home/mguski/Documents/exampleLogFiles/errlog.kod.d.20170204"
+
 
 scanList, unknownLogs = parse_errlog_file(errorLogFileName)
 
@@ -263,17 +265,17 @@ scanChangeList.append(["End of Log file", timeVec[-1]])
 
 # %%
 
-fig = plt.figure(figsize=[16, 10])
-ax = plt.subplot(211)
-plt.plot(t_a,nSeq_a, 'o',label="mcm.a" )
-plt.grid(True)
-plt.legend()
+#fig = plt.figure(figsize=[16, 10])
+#ax = plt.subplot(211)
+#plt.plot(t_a,nSeq_a, 'o',label="mcm.a" )
+#plt.grid(True)
+#plt.legend()
 
-plt.subplot(212, sharex=ax)
+#plt.subplot(212, sharex=ax)
 
-plt.plot(t_b,nSeq_b, 'o',label="mcm.b" )
-plt.grid(True)
-plt.legend()
+#plt.plot(t_b,nSeq_b, 'o',label="mcm.b" )
+#plt.grid(True)
+#plt.legend()
 # %% plot some things
 
 fig = plt.figure(figsize=[16, 10])
@@ -284,7 +286,7 @@ fig = plt.figure(figsize=[16, 10])
 ax1 = plt.subplot2grid((20,1), (1,0), rowspan=3)
 nSeqPerSecList = [seq.nSequences for seq in scanList]
 plt.plot(timeVec, nSeqPerSecList, "+")
-ax1.set_ylabel("seq / sec")
+ax1.set_ylabel("number of seq")
 plt.grid(True)
 #ax1.set_xticklabels([])
 masterAx = ax1
@@ -384,7 +386,7 @@ for seq in scanList:
         cf_start.append(seq.clearFreq_start/1000 )   
         cf_range.append((seq.clearFreq_range)/1000)      
 
-plt.errorbar(timeVec, cf_start, yerr=cf_range, capsize=0, fmt="none")
+#plt.errorbar(timeVec, cf_start, yerr=cf_range, capsize=0, fmt='none')
 plt.grid(True)
 #ax.set_xticklabels([])
 ax.set_ylabel("Clear Freq (in Mhz)")

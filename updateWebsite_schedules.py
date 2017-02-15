@@ -46,7 +46,12 @@ class scheduleUpdater(liveMonitor):
           
         # %% write data for website
     
-        read_schedules.save_figure(fileName_png, schedule_list)
+        #read_schedules.save_figure(fileName_png, schedule_list)
+        dayList = [[-1, 3], [3, 8], [8,13], [13,18], [18, 23], [23, 28], [28, 33] ]
+        fileName_png_template = "status_website/liveData/schedule_plot_{}.png"
+        for iPlot, dayLimits in enumerate(dayList):
+            read_schedules.save_figure(fileName_png_template.format(iPlot), schedule_list, dayLimits)
+            
         read_schedules.write_status_html_text(fileName_txt,schedule_list)
     
 if __name__ == '__main__':

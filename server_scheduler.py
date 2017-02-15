@@ -29,7 +29,8 @@ processList = []
 for key in configDict.keys():
     key = key.lower().strip()
     if key == "agent_log":
-        processList.append(read_agent_log.monitor_agent_log( float(configDict[key]['checkPeriod']), configDict[key]['logFileName'], configDict[key]['userName'], configDict[key]['ip'], configDict[key]['outputFile']))
+        print("skipping agent_log")
+#        processList.append(read_agent_log.monitor_agent_log( float(configDict[key]['checkPeriod']), configDict[key]['logFileName'], configDict[key]['userName'], configDict[key]['ip'], configDict[key]['outputFile']))
     elif key == "schedules":
         processList.append(updateWebsite_schedules.scheduleUpdater( float(configDict[key]['checkPeriod'])))
     else:
@@ -40,9 +41,9 @@ for key in configDict.keys():
 while True:
 
     for process in processList:
-        print("Checking process: {} (NminLeft: {})".format(process.__str__().split(".")[-1].split(" ")[0], process.minutes_to_next_check()))
+        print("Checking process: {0} (NminLeft: {1})".format(str(process.__class__).split(".")[-1].split(" ")[0], process.minutes_to_next_check()))
         if process.minutes_to_next_check() <= 0:
-            print("Running process: {}".format(process.__str__().split(".")[-1].split(" ")[0]))
+            print("Running process: {0}".format(str(process.__class__).split(".")[-1].split(" ")[0]))
             process.run() # TODO: output is warning/error msg 
 
             

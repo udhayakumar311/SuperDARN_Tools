@@ -8,6 +8,9 @@
    <title>UAF SuperDARN Radar Operation Monitor</title>
    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
    <script type="text/javascript" src="reloader.js"></script>
+   <script type="text/javascript" src="schedule_next_prev_buttons.js"></script>
+
+
 
 	<style>
 
@@ -71,16 +74,21 @@
   <li style="float:right"><a id=clock> Time</a></li>
 </ul> 
 
-<div style="margin-top:7%;padding:11px 16px;height:1000px;">
-<h2 id=headline>UAF Schedule</h2> 
+<div style="margin-top:1%;padding:11px 16px;height:1000px;">
 
+<img src="liveData/schedule_plot_0.png" alt="schedule overview" style="width:75%;max-height:100%; max-width:100%" id="schedule_plot5" />
+<br>
+<input type="button" value="PREVIOUS DAYS" id="prev" name="prev" onclick="go_back()" >
 
-<img id="schedule_plot" src="schedule_plot.png" alt="Overview plot not available..." style="width:80%;max-height:100%; max-width:100%"">
+<input type="button" value="NEXT DAYS" id="next" name="next" onclick="go_fwd()" >
 
 <h3>Schedule Status:</h3>
    <div id="schedule_status_text">
       <p>Loading Data...</p>
    </div>
+
+
+
 
 
 </div>

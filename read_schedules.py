@@ -22,8 +22,9 @@ Created on Mon Dec 26 11:48:59 2016
 
 # %%
 
-import urllib
-import urllib.request
+#import urllib
+#import urllib.request
+from six.moves import urllib
 import datetime
 import matplotlib.pyplot as plt
 import numpy as np
@@ -212,7 +213,7 @@ def create_figure(schedule_list, plotRange, labelSWGschedule = True):
     fig = plt.figure(figsize=[16, 10])
     ax = plt.subplot2grid((1,9), (0,0), colspan=8)
     
-    controlProgramColor = dict(normalscan="limegreen", normalsound="darkolivegreen", themisscan='royalblue', pcodescan_15km='purple',  codescan_15km="magenta", pcodescan='indigo' ,rbspscan='orange', iwd_normalscan='y',noopscan='lightgray', iwdscan='darkturquoise', interleavescan='springgreen', spaletascan='yellow')
+    controlProgramColor = dict(normalscan="limegreen", normalsound="darkolivegreen", themisscan='royalblue', pcodescan_15km='purple',  codescan_15km="magenta",pcodecamp_bm3_15km='blueviolet', pcodecamp_bm9_15km='hotpink', pcodescan='indigo' ,rbspscan='orange', iwd_normalscan='y',noopscan='lightgray', iwdscan='darkturquoise', interleavescan='springgreen', spaletascan='yellow')
     
     yLabelList = []
     yTickList = []
@@ -221,19 +222,20 @@ def create_figure(schedule_list, plotRange, labelSWGschedule = True):
     now = datetime.datetime.utcnow()
     swg_schedule = read_swg_schedule(now.month, now.year)
     
-    swg_plotNextMonth = now.day > 15
+    swg_plotNextMonth = now.day > 2
     if swg_plotNextMonth:
-        nextMonth = now + datetime.timedelta(days=30)
+        nextMonth = now + datetime.timedelta(days=20)
         swg_schedule_nextMonth = read_swg_schedule(nextMonth.month, nextMonth.year)
     
-    xLimStart = now.date() + datetime.timedelta(days=plotRange[0])
-    xLimEnd = now.date() + datetime.timedelta(days=plotRange[1])
+    startOfDay = datetime.datetime.utcnow().replace(hour= 0, second= 0, minute=0, microsecond=0)
+    xLimStart = startOfDay + datetime.timedelta(days=plotRange[0])
+    xLimEnd = startOfDay + datetime.timedelta(days=plotRange[1])
     
     for iRadar in range(len(schedule_list)):
         if iRadar == 0 or schedule_list[iRadar][0].url_schedule.split("/")[-1][:1] != schedule_list[iRadar-1][0].url_schedule.split("/")[-1][:1]:
             iSchedule += 1
         else:
-            iSchedule += 0.3
+            iSchedule += 0.3+1
         for iSchedInRadar, currSchedule in enumerate(schedule_list[iRadar]):
             iSchedule += 0.8
       #      yLabelList.append(schedule_file_list[iRadar][iSchedInRadar].split("/")[-1][:-4])
@@ -251,11 +253,18 @@ def create_figure(schedule_list, plotRange, labelSWGschedule = True):
                     plotColor = 'gray'
                 startPoint = currSchedule.startTimeList[iEntry]
                 duration = currSchedule.durationList[iEntry]/60/24
-                ax.barh(iSchedule,  duration, left=startPoint, align='center', color=plotColor, alpha=0.75)
-                textPosition = startPoint+datetime.timedelta(minutes=currSchedule.durationList[iEntry]/2)
-    #            if textPosition.date() < xLimEnd and textPosition.date() > xLimStart: # if in xLim range
-                if now > startPoint and now < (startPoint + datetime.timedelta(minutes=currSchedule.durationList[iEntry])):  # if is current program
-                    ax.text(textPosition, iSchedule, currProgram , rotation=0, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
+                if currSchedule.priorityList[iEntry] >= 90:
+                    offset = 0.8
+                else:
+                    offset = 0
+                ax.barh(iSchedule+offset,  duration, left=startPoint, align='center', color=plotColor, alpha=0.75)
+                visible_start_point  = max(startPoint, xLimStart)
+                visible_end_point    = min(startPoint+datetime.timedelta(minutes=currSchedule.durationList[iEntry]), xLimEnd)
+                textPosition = visible_start_point + (visible_end_point - visible_start_point) /2 
+                #  textPosition = startPoint+datetime.timedelta(minutes=currSchedule.durationList[iEntry]/2)
+                if textPosition < xLimEnd and textPosition > xLimStart: # if in xLim range
+    #            if now > startPoint and now < (startPoint + datetime.timedelta(minutes=currSchedule.durationList[iEntry])):  # if is current program
+                     ax.text(textPosition, iSchedule+offset, currProgram , rotation=0, backgroundcolor='w',  ha='center', va='center', size=10, bbox=dict(visible=False))
                 
             # plt.gcf().autofmt_xdate()
     
@@ -270,11 +279,11 @@ def create_figure(schedule_list, plotRange, labelSWGschedule = True):
         ax.barh(iSchedule,  duration, left=startPoint, align='center', height=1.6, color=swg_schedule_color[swg_schedule.phaseNameList[iEntry].split(' ')[0]
     ])
         textPosition = startPoint+swg_schedule.durationInDays[iEntry]/2
-        if textPosition.date() < xLimEnd and textPosition.date() > xLimStart and labelSWGschedule: # if in xLim range
+        if textPosition < xLimEnd and textPosition > xLimStart and labelSWGschedule: # if in xLim range
             printText = swg_schedule.phaseNameList[iEntry]
             if "(see Note" in printText: # remove note
                 printText = printText[:printText.index("(see Note")-1]
-            ax.text(textPosition, iSchedule, printText , rotation=45, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
+            ax.text(textPosition, iSchedule, printText , rotation=45, backgroundcolor='w',  ha='center', va='center', size=10, bbox=dict(visible=False) )
     
     
     if swg_plotNextMonth:
@@ -284,11 +293,11 @@ def create_figure(schedule_list, plotRange, labelSWGschedule = True):
             ax.barh(iSchedule,  duration, left=startPoint, align='center', height=1.6, color=swg_schedule_color[swg_schedule_nextMonth.phaseNameList[iEntry].split(' ')[0]
         ])
             textPosition = startPoint+swg_schedule_nextMonth.durationInDays[iEntry]/2
-            if textPosition.date() < xLimEnd and textPosition.date() > xLimStart and labelSWGschedule: # if in xLim range
+            if textPosition < xLimEnd and textPosition > xLimStart and labelSWGschedule: # if in xLim range
                 printText = swg_schedule_nextMonth.phaseNameList[iEntry]
                 if "(see Note" in printText: # remove note
                     printText = printText[:printText.index("(see Note")-1]
-                ax.text(textPosition, iSchedule, printText , rotation=45, backgroundcolor='w', alpha=0.5, ha='center', va='center' )
+                ax.text(textPosition, iSchedule, printText , rotation=45, backgroundcolor='w',  ha='center', va='center', size=10, bbox=dict(visible=False) )
       
     yTickList.append(iSchedule)
     yLabelList.append("SWG schedule")
@@ -415,8 +424,8 @@ def write_status_html_text(fileName,schedule_list):
 
 # %%
 
-def save_figure(fileName, schedule_list):
-    plotRange = [-1, 3] # in days from today
+def save_figure(fileName, schedule_list, plotRange):
+    #plotRange = [-1, 3] # in days from today
     fig = create_figure(schedule_list, plotRange)
     fig.savefig(fileName)
     plt.close(fig)
@@ -428,7 +437,8 @@ if __name__ == '__main__':
     root_schedule_url = 'https://raw.githubusercontent.com/UAF-SuperDARN-OPS/schedule_files/'
     
     schedule_file_list = [["adak/ade/ade.a.scd", "adak/ade/ade.a.special"], ["adak/adw/adw.a.scd", "adak/adw/adw.a.special"], ["kodiak/kod/kod.c.scd", "kodiak/kod/kod.c.campaign.scd"], ["kodiak/kod/kod.d.scd", "kodiak/kod/kod.d.campaign.scd"], ['mcmurdo/mcm/mcm.a.scd'], ['mcmurdo/mcm/mcm.b.scd'], ['southpole/sps/sps.a.scd']]
-    #schedule_file_list = [[]]
+    #schedule_file_list = [ ["kodiak/kod/kod.c.scd", "kodiak/kod/kod.c.campaign.scd"], ["kodiak/kod/kod.d.scd", "kodiak/kod/kod.d.campaign.scd"], ]    
+    
     #, 'kodiak/kod/kod.c.campaign.scd', 'kodiak/kod/kod.d.campaign.scd'
     schedule_file_list.reverse() # reverse order to have adak at the top
     schedule_list = []
@@ -456,10 +466,11 @@ if __name__ == '__main__':
     # %%
    
     # %%
-    #plotRange = [-1, 3] # in days from today
+    plotRange = [7, 12] # in days from today
     ##fig = create_figure(schedule_list, plotRange)
     
-    plotRange = [-5, 35] # in days from today
+   # plotRange = [-5, 35] # in days from today
+    #plotRange = [8, 29] # in days from today
     labelSWGschedule = False
     
     fig = create_figure(schedule_list, plotRange) 
