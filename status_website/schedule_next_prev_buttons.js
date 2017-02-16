@@ -9,7 +9,7 @@ var images = new Array(7);
     
 
     var nImages = 6;
-    var iImage = 1;
+    var iImage = 0;
 
   function  go_back() {
     var im=document.getElementById("schedule_plot5");
