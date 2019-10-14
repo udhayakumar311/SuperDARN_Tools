@@ -1,0 +1,21 @@
+class calc:
+    __x=0
+    __y=0
+    def __init__(self,a,b):
+        self.__x=a
+        self.__y=b
+    def add(self):
+        print("Sum is ",self.__x+self.__y)
+    def sub(self):
+        print("Difference is ",self.__x-self.__y)
+    def multiply(self):
+        print("Product is ",self.__x*self.__y)
+    def divide(self):
+        print("Quotient is ",self.__x/self.__y)
+num1=int(input("Enter first number"))
+num2=int(input("Enter second number"))
+c=calc(num1,num2)
+c.add()
+c.sub()
+c.multiply()
+c.divide()
