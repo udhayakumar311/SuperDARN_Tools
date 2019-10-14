@@ -1,0 +1,4 @@
+#Conversion of Celsius to Fahrenheit
+c=float(input("Enter temperature in Celsius"))
+f=(c*1.8)+32
+print(c," degree celsius is equal to ",f," degree fahrenheit")
